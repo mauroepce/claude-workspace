@@ -30,30 +30,102 @@ More detail on the pattern in [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md).
 
 There are two ways depending on whether you're starting fresh or adding this to an existing project.
 
+> **TL;DR:** Flow A is like "buy a model house from a kit" — fresh start, plan picked, everything assembled. Flow B is like "add a security system to a house you already have" — installed without touching your furniture.
+
+---
+
 ### A) New workspace (start from scratch)
 
-1. **Click "Use this template"** on GitHub → create your own repo from this one.
-2. Clone it locally and open in Claude Code (or VSCode + Claude).
-3. In Claude's chat, type **`/setup`**.
-4. Claude interviews you (language, workspace type, rules) and generates the files.
-5. Then use **`/new-project <name>`** to create each subproject.
+For when you want to start a fully new project using this template as the base.
+
+#### Step 1 — "Use this template" on GitHub
+
+When a GitHub repo is marked as a template (configured in repo Settings), a green button appears in the top-right that says **"Use this template"**.
+
+When you click it, GitHub asks you:
+- A name for **your** new repo (e.g., `phd-thesis`)
+- Public or private
+
+GitHub then **clones the entire template content into a brand-new repo** under your account. It's like a fork but without the history — your repo starts clean.
+
+You end up with: `github.com/your-user/phd-thesis` with all the template files inside.
+
+#### Step 2 — Clone and open in Claude Code
+
+```bash
+git clone https://github.com/your-user/phd-thesis.git
+cd phd-thesis
+```
+
+Open the folder in Claude Code (or VSCode with the Claude extension).
+
+#### Step 3 — Type `/setup` in Claude's chat
+
+In the chat, type `/setup`. Claude runs the interview:
+- "What language do you want to work in?" → e.g., "Español"
+- "Workspace name?" → e.g., "phd-thesis"
+- "What kind of work is this?" → e.g., "Research"
+- ...and a few more.
+
+At the end, Claude **personalizes all files** based on your answers: the root `CLAUDE.md` gets your conventions, the subproject templates fit your domain, etc.
+
+#### Step 4 — Create your first subproject
+
+```
+/new-project my-first-experiment
+```
+
+Done.
+
+---
 
 ### B) Add to an existing project
 
-If you already have a project (a research repo, a monorepo, a notes folder…) and want to layer this pattern on top:
+For when you **already have a project on your machine** (a folder with code, notes, papers, whatever) and want to **layer the pattern on top** without losing anything you already have.
+
+Example: you already have `~/research/` with several papers in progress, code, notes. You don't want to clone a new repo — you want to add the system to that folder.
+
+#### Step 1 — Go to your existing project
 
 ```bash
-cd path/to/your/existing/project
+cd ~/research
+```
+
+(`cd` = "change directory" — opens a terminal and moves into your project's folder.)
+
+#### Step 2 — Run the install command
+
+```bash
 curl -fsSL https://raw.githubusercontent.com/mauroepce/claude-workspace-template/main/bin/install.sh | bash
 ```
 
-The installer:
-- Adds `.claude/commands/`, `_templates/`, `docs/ARCHITECTURE.md` to your project.
-- **Doesn't touch your code.**
-- Preserves your existing `CLAUDE.md` if you have one. `/setup` will ask later whether to merge or replace it.
-- Backs up any conflicting files in `.claude/commands/` to `*.bak`.
+What this command does, **piece by piece**:
 
-Then in Claude's chat, type `/setup` and follow the interview.
+| Piece | Meaning |
+|-------|---------|
+| `curl` | A program that downloads things from the internet via the terminal |
+| `-fsSL` | Curl flags: silent, follow redirects, fail on error |
+| `https://raw.githubusercontent.com/.../install.sh` | URL of the `install.sh` file inside the template repo |
+| `\|` (pipe) | "Pipe" — passes what was downloaded to the next command |
+| `bash` | Runs the downloaded script |
+
+In plain English: **"Download the `install.sh` script from the repo and run it right here."**
+
+**What the script does:**
+- Creates `.claude/commands/` with the 3 commands (setup, new-project, status)
+- Creates `_templates/` with the presets and templates
+- Creates `docs/ARCHITECTURE.md`
+- If you **don't have** a `CLAUDE.md` yet → creates one (the bootstrap version)
+- If you **already have** a `CLAUDE.md` → **leaves it alone** (doesn't touch what you already wrote)
+- If there are conflicts in other files → makes `.bak` and puts the new ones in place
+
+**Important:** the script **doesn't touch your existing code**. It only adds the system files.
+
+#### Step 3 — Open Claude and run `/setup`
+
+Same as flow A. The difference is that this time `/setup` detects you already have a `CLAUDE.md` and asks:
+
+> "I see you already have a CLAUDE.md with content. Want me to (a) prepend the workspace conventions at the top, (b) append at the bottom, (c) replace entirely (with backup), or (d) leave your CLAUDE.md alone and just configure the rest?"
 
 ---
 
