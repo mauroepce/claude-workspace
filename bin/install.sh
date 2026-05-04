@@ -21,6 +21,7 @@ ALWAYS_INSTALL=(
   ".claude/commands/setup.md"
   ".claude/commands/new-project.md"
   ".claude/commands/status.md"
+  ".claude/commands/checkpoint.md"
   "_templates/presets/research.md"
   "_templates/presets/product.md"
   "_templates/presets/knowledge.md"
