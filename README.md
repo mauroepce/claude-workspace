@@ -28,13 +28,36 @@ More detail on the pattern in [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md).
 
 ## How to use it
 
+There are two ways depending on whether you're starting fresh or adding this to an existing project.
+
+### A) New workspace (start from scratch)
+
 1. **Click "Use this template"** on GitHub → create your own repo from this one.
 2. Clone it locally and open in Claude Code (or VSCode + Claude).
 3. In Claude's chat, type **`/setup`**.
 4. Claude interviews you (language, workspace type, rules) and generates the files.
 5. Then use **`/new-project <name>`** to create each subproject.
 
-Setup takes ~90 seconds.
+### B) Add to an existing project
+
+If you already have a project (a research repo, a monorepo, a notes folder…) and want to layer this pattern on top:
+
+```bash
+cd path/to/your/existing/project
+curl -fsSL https://raw.githubusercontent.com/mauroepce/claude-workspace-template/main/bin/install.sh | bash
+```
+
+The installer:
+- Adds `.claude/commands/`, `_templates/`, `docs/ARCHITECTURE.md` to your project.
+- **Doesn't touch your code.**
+- Preserves your existing `CLAUDE.md` if you have one. `/setup` will ask later whether to merge or replace it.
+- Backs up any conflicting files in `.claude/commands/` to `*.bak`.
+
+Then in Claude's chat, type `/setup` and follow the interview.
+
+---
+
+Setup takes ~90 seconds either way.
 
 **Multi-language**: setup asks you what language you want to work in (English, Español, Português, Français, etc.). All generated files are translated accordingly.
 

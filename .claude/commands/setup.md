@@ -69,7 +69,16 @@ Save as `EXTRA_COMMANDS`.
 
 Once you have all answers, generate these files in this order:
 
-### 2.1 — Root `CLAUDE.md` (overwrite the bootstrap version)
+### 2.1 — Root `CLAUDE.md` (handle fresh OR existing-project case)
+
+First, **check if `CLAUDE.md` already exists and whether it's the bootstrap version or real content**:
+
+- If it exists and matches the bootstrap (mentions "Workspace not configured yet") → **overwrite** with the new generated content.
+- If it exists and has **real content** (user installed via `bin/install.sh` into an existing project that already had a CLAUDE.md):
+  - Show the user the first 20 lines of their existing CLAUDE.md.
+  - Ask: "Detected existing CLAUDE.md with content. Want me to: (a) **prepend** workspace conventions at the top, (b) **append** at the bottom, (c) **replace** entirely (will back up to CLAUDE.md.bak), or (d) **skip** — leave your CLAUDE.md alone and just install commands?"
+  - Apply the user's choice.
+- If it doesn't exist → create from template.
 
 Use `_templates/root-CLAUDE.md.tmpl` as the structure. Translate to `LANG`. Fill in:
 - Workspace name and purpose (derived from preset description)
