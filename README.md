@@ -96,7 +96,7 @@ cd ~/research
 #### Step 2 — Run the install command
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/mauroepce/claude-workspace-template/main/bin/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/mauroepce/claude-workspace/main/bin/install.sh | bash
 ```
 
 What this command does, **piece by piece**:

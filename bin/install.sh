@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Install claude-workspace into an existing project.
-# Usage:  curl -fsSL https://raw.githubusercontent.com/mauroepce/claude-workspace-template/main/bin/install.sh | bash
+# Usage:  curl -fsSL https://raw.githubusercontent.com/mauroepce/claude-workspace/main/bin/install.sh | bash
 #
 # This script:
 #   - Adds .claude/commands/, _templates/, docs/ARCHITECTURE.md to your project.
@@ -12,7 +12,7 @@
 
 set -euo pipefail
 
-REPO="mauroepce/claude-workspace-template"
+REPO="mauroepce/claude-workspace"
 BRANCH="main"
 RAW="https://raw.githubusercontent.com/${REPO}/${BRANCH}"
 
