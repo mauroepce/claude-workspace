@@ -73,12 +73,32 @@ Each preset comes with a tailored `STATUS.md` skeleton (e.g., research → hypot
 
 ## Commands
 
+### Workspace commands (project-level, installed by `/setup`)
+
 | Command | What it does |
 |---------|--------------|
 | `/setup` | First-run interview. Configures the workspace. |
 | `/new-project <name>` | Add a new subproject with its `CLAUDE.md` and `STATUS.md`. |
 | `/status` | Summary of all subprojects with their open TODOs. |
 | `/checkpoint` | Force-update active subproject's `STATUS.md` mid-session. |
+
+### Personal commands (user-level, install once, available everywhere)
+
+These layer on top of any project, including team repos where you don't control the workspace setup. Install once with:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/mauroepce/claude-workspace/main/bin/install-personal.sh | bash
+```
+
+| Command | What it does |
+|---------|--------------|
+| `/work [task]` | Spec → generate → review → iterate framework. Forces structured intake before code generation. |
+| `/issue <number>` | Pull a GitHub issue with `gh`, structure its context, hand off to `/work`. |
+| `/debug` | Hypothesis-driven debugging: forces you to predict the cause, decide scope (in-spec vs separate), fix root cause not symptom, add regression test. |
+| `/safe-commit` | Security review on staged changes + commit message tied to the spec. Refuses unsafe commits. |
+| `/safe-push` | Full-branch security review + tests + push. Refuses to push to `main` without explicit OK. |
+
+The methodology behind these four commands is documented in [`docs/FRAMEWORK.md`](./docs/FRAMEWORK.md).
 
 ---
 
