@@ -27,9 +27,23 @@ Lines: +<added> / -<removed>
 <list of files with their diff stat>
 ```
 
-## Phase 2 — Security review
+## Phase 2 — Code review (quality and correctness)
 
-Use the built-in `security-review` skill against the staged diff. If it's not available or fails, fall back to manually scanning for these patterns:
+Invoke `/code-review` against the staged changes. This is the quality pass: naming, complexity, pattern adherence, test coverage, edge cases, error handling, performance traps.
+
+Present the standard `/code-review` output (must-fix / should-fix / nice-to-have / strengths).
+
+**Decision tree:**
+
+- If **must-fix** findings exist: stop and tell the user "There are must-fix findings. Address them, re-stage, and run `/safe-commit` again. I'm not going to commit code that wouldn't pass PR review."
+- If **should-fix** only: ask "Want to address these now or note them for follow-up?"
+- If **nice-to-have** or **clean**: proceed to Phase 3.
+
+## Phase 3 — Security review
+
+Invoke `/security-review` against the staged diff (built-in Claude Code skill). This is a separate concern from quality — it looks specifically for threat patterns: hardcoded secrets, injection, auth/permission changes, unverified inputs, leaked PII, etc.
+
+If `/security-review` isn't available or fails, fall back to manually scanning for:
 
 - Hardcoded secrets (API keys, tokens, passwords) — match patterns like `sk-`, `Bearer `, `AKIA`, `xoxb-`, `ghp_`, `password = "..."`
 - New env vars referenced without being added to `.env.example`
@@ -46,16 +60,13 @@ SECURITY REVIEW
 ✓ <N> checks passed
 ⚠ <N> warnings:
   - <warning 1 with file:line>
-  - <warning 2 with file:line>
 ✗ <N> blockers (if any):
   - <blocker 1 with file:line>
 ```
 
-If there are blockers, **stop** and tell the user: "Address the blockers above before committing. I'm not going to commit code with these issues."
+Same decision tree as Phase 2: blockers stop the commit, warnings prompt the user.
 
-If there are only warnings, ask: "Proceed despite the warnings, or want to fix first?"
-
-## Phase 3 — Verify spec alignment (if /work was used)
+## Phase 4 — Verify spec alignment (if /work was used)
 
 If the user followed `/work` for this task, ask: "Briefly — does this commit deliver the spec from `/work` Phase 1?"
 
@@ -63,7 +74,7 @@ If they say no, suggest splitting the commit (use `git reset` and re-stage) so e
 
 If they didn't use `/work`, skip this phase. Don't lecture them.
 
-## Phase 4 — Commit message
+## Phase 5 — Commit message
 
 Generate a commit message that follows this structure:
 
@@ -88,7 +99,7 @@ git commit -m "<subject>" -m "<body>"
 
 **Never use `--no-verify`.** If a hook fails, surface the failure and ask the user how to handle it. Don't bypass hooks.
 
-## Phase 5 — Confirmation
+## Phase 6 — Confirmation
 
 After commit succeeds:
 
