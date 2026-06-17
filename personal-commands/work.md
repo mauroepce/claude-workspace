@@ -39,6 +39,8 @@ Once Phase 1 is complete, ask:
 7. **What constraints from the codebase or team conventions apply?**
    Examples: "follow the pattern in reference module X", "no new dependencies", "must be backwards compatible", "match the existing test style".
 
+   **If this is an unfamiliar codebase to the user**, suggest invoking `/conventions` first. That command produces a structured detection of import style, naming, file organization, error handling, and test patterns from sample files. Without it, generated code drifts from existing patterns. The 60 seconds spent on `/conventions` save 20 minutes of style-drift fixes later.
+
 ## Phase 3 — Plan
 
 Before generating code, output a 3-7 line plan in plain language. Format:
