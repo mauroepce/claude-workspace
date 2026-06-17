@@ -51,6 +51,18 @@ When a bug appears — during implementation, in a production log, in a CI alert
 
 The win: stops the "paste error → first fix → next error" loop that accumulates hacks. Your hypothesis matching the diagnosis is also the calibration signal — if you were wildly wrong, the bug points to a deeper misunderstanding worth investigating.
 
+### `/code-review` — quality review (atomic, reusable)
+
+Quality-focused code review: naming, complexity, pattern adherence, test coverage, edge cases, error handling, performance traps. Output is tiered: must-fix / should-fix / nice-to-have / strengths.
+
+Use standalone when:
+- Iterating on quality mid-implementation, before deciding commit boundary
+- Reviewing unstaged work or files on a different branch
+- Reviewing a specific file outside the staged context
+- Doing a pre-PR sanity check on a branch before push
+
+`/safe-commit` invokes this internally as Phase 2 — that's composition, not duplication. The atomic command and the orchestrator coexist: invoke the atom when you only need quality feedback, invoke the orchestrator when you're ready for the full commit gate.
+
 ### `/safe-commit` — review before commit
 
 Runs the built-in `security-review` skill on staged changes, scans for hardcoded secrets and other risky patterns, verifies the commit maps to your `/work` spec, generates a commit message that explains the **why**, and only commits after explicit confirmation. Never bypasses git hooks.
