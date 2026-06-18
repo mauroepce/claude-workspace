@@ -77,6 +77,22 @@ The 60 seconds spent on `/conventions` save 20 minutes of style-drift fixes late
 
 If you're starting a fresh project where conventions don't exist yet, `/work` skips this lookup and conventions come from the explicit constraints articulated in the spec phase. As the project grows, you can run `/conventions` at some point and then future `/work` invocations auto-pick it up.
 
+### `/architecture-map` — codebase cheat sheet
+
+Scans an entire codebase and produces `architecture-map.md`: stack (from package.json), directory structure, database schema (Prisma / Drizzle / Supabase migrations), API routes (Next.js App Router / Express / NestJS controllers), auth pattern, external integrations, and 5-10 critical files identified.
+
+Complements `/conventions`: `/conventions` tells you what the code looks like (style), `/architecture-map` tells you what the code does (structure). Together they give you both.
+
+Use when joining an unfamiliar repo, returning to your own code after months, or preparing for an interview where you'll be questioned on a system you wrote a while ago. Honest about gaps — sections that can't be derived from code are marked "TBD: fill from memory" instead of fabricated.
+
+### `/decision` — capture a technical decision
+
+Walks the user through 4 questions (decision, alternative, why this won, confidence level 🟢🟡🔴), with an optional 5th about trade-offs. Appends to `decisions-log.md` so the rationale persists across sessions.
+
+Decisions made in chat evaporate when the session ends — by writing them to a file, they become part of the codebase's tribal knowledge. Useful both during `/work` (capture choices as you make them) and retroactively (document past decisions from memory).
+
+The confidence level is the most senior part: a 🔴 documented honestly is worth more than a fabricated 🟢. Future-you reading the log knows which decisions are stable and which are worth revisiting.
+
 ### `/code-review` — quality review (atomic, reusable)
 
 Quality-focused code review: naming, complexity, pattern adherence, test coverage, edge cases, error handling, performance traps. Output is tiered: must-fix / should-fix / nice-to-have / strengths.
