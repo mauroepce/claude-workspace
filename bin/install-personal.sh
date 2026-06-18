@@ -1,15 +1,27 @@
 #!/usr/bin/env bash
-# Install Mauricio's personal slash commands into ~/.claude/commands/
-# These are USER-LEVEL commands — available in any project, regardless of team config.
+# Install Mauricio's personal slash commands + templates into ~/.claude/
+# These are USER-LEVEL — available in any project, regardless of team config.
 #
 # Usage:
 #   curl -fsSL https://raw.githubusercontent.com/mauroepce/claude-workspace/main/bin/install-personal.sh | bash
 #
 # What gets installed:
+#
+# Slash commands (~/.claude/commands/):
 #   /work         — spec → generate → review → iterate framework
 #   /issue <N>    — pull GitHub issue, structure context, hand off to /work
-#   /safe-commit  — security review + commit message + confirm before commit
-#   /safe-push    — security review + tests + confirm before push (refuses main without explicit OK)
+#   /debug        — hypothesis-driven debugging, root cause over symptom
+#   /conventions  — scan unfamiliar codebase for its conventions
+#   /code-review  — quality review of staged or specified changes
+#   /safe-commit  — /code-review + /security-review + commit with confirmation
+#   /safe-push    — full-branch review + push (refuses main without OK)
+#   /scaffold     — pick a template and insert it adapted to current context
+#
+# Templates (~/.claude/templates/):
+#   backend/      express-endpoint, nest-controller, next-api-route
+#   frontend/     next-page, react-form
+#   utils/        async-retry, result-type, zod-helpers
+#   tests/        vitest-setup
 #
 # Existing files with the same names are backed up to *.bak before being replaced.
 
@@ -27,53 +39,91 @@ PERSONAL_COMMANDS=(
   "code-review"
   "safe-commit"
   "safe-push"
+  "scaffold"
 )
 
-TARGET_DIR="$HOME/.claude/commands"
+TEMPLATES=(
+  "README.md"
+  "backend/express-endpoint.ts"
+  "backend/nest-controller.ts"
+  "backend/next-api-route.ts"
+  "frontend/next-page.tsx"
+  "frontend/react-form.tsx"
+  "utils/async-retry.ts"
+  "utils/result-type.ts"
+  "utils/zod-helpers.ts"
+  "tests/vitest-setup.ts"
+)
+
+COMMANDS_DIR="$HOME/.claude/commands"
+TEMPLATES_DIR="$HOME/.claude/templates"
 
 echo ""
-echo "→ Installing personal slash commands to: $TARGET_DIR"
+echo "→ Installing slash commands to: $COMMANDS_DIR"
+echo "→ Installing templates to:      $TEMPLATES_DIR"
 echo ""
 
-mkdir -p "$TARGET_DIR"
+mkdir -p "$COMMANDS_DIR" "$TEMPLATES_DIR"
 
 count_installed=0
 count_backed_up=0
+count_failed=0
 
-for cmd in "${PERSONAL_COMMANDS[@]}"; do
-  src="${RAW}/personal-commands/${cmd}.md"
-  dest="${TARGET_DIR}/${cmd}.md"
+install_file() {
+  local src_url="$1"
+  local dest_path="$2"
+  local label="$3"
 
-  if [ -f "$dest" ]; then
-    mv "$dest" "${dest}.bak"
-    echo "  ⚠ /${cmd} existed → backed up to ${cmd}.md.bak"
+  if [ -f "$dest_path" ]; then
+    mv "$dest_path" "${dest_path}.bak"
+    echo "  ⚠ ${label} existed → backed up to *.bak"
     count_backed_up=$((count_backed_up + 1))
   fi
 
-  if curl -fsSL "$src" -o "$dest"; then
-    echo "  ✓ /${cmd}"
+  mkdir -p "$(dirname "$dest_path")"
+
+  if curl -fsSL "$src_url" -o "$dest_path"; then
+    echo "  ✓ ${label}"
     count_installed=$((count_installed + 1))
   else
-    echo "  ✗ Failed to download /${cmd}"
-    exit 1
+    echo "  ✗ Failed to download ${label}"
+    count_failed=$((count_failed + 1))
   fi
+}
+
+echo "Slash commands:"
+for cmd in "${PERSONAL_COMMANDS[@]}"; do
+  install_file "${RAW}/personal-commands/${cmd}.md" "${COMMANDS_DIR}/${cmd}.md" "/${cmd}"
 done
 
 echo ""
-echo "✅ ${count_installed} commands installed, ${count_backed_up} backed up"
+echo "Templates:"
+for tpl in "${TEMPLATES[@]}"; do
+  install_file "${RAW}/templates/${tpl}" "${TEMPLATES_DIR}/${tpl}" "templates/${tpl}"
+done
+
+echo ""
+if [ $count_failed -eq 0 ]; then
+  echo "✅ ${count_installed} files installed, ${count_backed_up} backed up"
+else
+  echo "⚠️  ${count_installed} installed, ${count_backed_up} backed up, ${count_failed} failed"
+  exit 1
+fi
+
 echo ""
 echo "Available now in ANY Claude Code session, any project:"
 echo ""
-echo "  /work          — start a task with the spec-first framework"
+echo "  /work          — spec-first task framework"
 echo "  /issue <num>   — pull a GitHub issue and structure its context"
-echo "  /debug         — systematic debugging: hypothesis before fix, root cause over symptom"
-echo "  /conventions   — scan an unfamiliar codebase for its style/patterns (import style, naming, tests, errors)"
-echo "  /code-review   — quality review of staged changes (naming, complexity, tests, edge cases)"
-echo "  /safe-commit   — runs /code-review + /security-review, then commit with confirmation"
-echo "  /safe-push     — review branch diff + push safely (blocks main without OK)"
+echo "  /debug         — hypothesis-driven debugging"
+echo "  /conventions   — scan an unfamiliar codebase for its conventions"
+echo "  /code-review   — quality review of staged changes"
+echo "  /safe-commit   — runs /code-review + /security-review + commit with confirmation"
+echo "  /safe-push     — branch review + push (blocks main without OK)"
+echo "  /scaffold      — pick a template from ~/.claude/templates/ and insert it"
 echo ""
-echo "These are personal — they layer on top of whatever team config exists."
-echo "If a project commits its own /work or /safe-commit, the project version wins."
+echo "Templates browseable: ls ~/.claude/templates/"
 echo ""
-echo "To update: re-run this script. To uninstall: rm ~/.claude/commands/{work,issue,debug,conventions,code-review,safe-commit,safe-push}.md"
+echo "To update: re-run this script."
+echo "To uninstall: rm -rf ~/.claude/commands/{work,issue,debug,conventions,code-review,safe-commit,safe-push,scaffold}.md ~/.claude/templates/"
 echo ""
