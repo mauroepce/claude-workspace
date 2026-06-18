@@ -158,11 +158,43 @@ WHAT YOU CAN'T TELL FROM 5 FILES (honest gaps)
 - ...
 ```
 
-## Phase 5 — Hand off
+## Phase 5 — Persist (critical) + hand off
 
-End with:
+The report MUST be saved to disk so subsequent `/work` invocations can read it. Chat-only is useless after the conversation ends.
 
-> "Conventions detected. When you invoke `/work` next, I'll respect these patterns in any code I generate. If you want me to write this to `CONVENTIONS.md` in the repo, say so. If anything in the report looks off (you know better than 5 files can show), correct me before we start."
+Ask the user where to save:
+
+> "I'll save this report so `/work` can pick it up automatically next time. Where?
+>
+> 1. `.claude/conventions.md` — committed to repo (default, team benefits)
+> 2. `CONVENTIONS.md` at root — committed, more visible to anyone browsing the repo
+> 3. `.claude/conventions.local.md` — gitignored, personal-only (for interview prep, client repos you don't own, etc.)
+> 4. Chat only — discard (only choose if you're exploring and won't act on it)
+>
+> Default is **1**. Which?"
+
+Wait for an answer. If user picks 1, 2, or 3, write the file using the EXACT same structured format from Phase 4 (the whole block including LANGUAGE/RUNTIME, IMPORT STYLE, ANTI-PATTERN AUDIT, HONEST GAPS).
+
+If user picks 4, just leave it in chat.
+
+For option 3 (`.claude/conventions.local.md`), also check that `.gitignore` covers it. Run:
+
+```bash
+grep -q 'conventions.local.md\|.claude/\*\.local\.\*' .gitignore 2>/dev/null
+```
+
+If the pattern isn't there, suggest:
+
+> "I noticed `.gitignore` doesn't cover `.claude/*.local.md`. Want me to add it? (recommended for the gitignored option)"
+
+Add this line to `.gitignore` if user agrees:
+```
+.claude/*.local.md
+```
+
+Then output:
+
+> "Saved to `<path>`. When you invoke `/work` next, the Context phase will automatically pick it up — no need to re-paste. If anything in the report is wrong (you know better than 5 files can show), edit the file directly or run `/conventions` again to overwrite."
 
 ## What NOT to do
 

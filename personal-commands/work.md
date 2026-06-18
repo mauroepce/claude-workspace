@@ -31,7 +31,30 @@ Save a structured summary of all 5 answers in a temporary working note. The user
 
 ## Phase 2 — Context
 
-Once Phase 1 is complete, ask:
+Once Phase 1 is complete:
+
+### Step 2.0 — Auto-load existing conventions (critical)
+
+Before asking the user anything, check whether `/conventions` was already run in this project. Look for these files in order, use the first one that exists:
+
+```bash
+test -f .claude/conventions.local.md && echo "found: .claude/conventions.local.md"
+test -f .claude/conventions.md && echo "found: .claude/conventions.md"
+test -f CONVENTIONS.md && echo "found: CONVENTIONS.md"
+```
+
+If one is found:
+- Read it in full.
+- Tell the user: *"I found a conventions report at `<path>`. I'll respect those patterns. If anything has changed, run `/conventions` again to refresh. Otherwise, continuing with the spec phase."*
+- Use those conventions when generating code in Phase 4.
+
+If none is found and this looks like an unfamiliar codebase (large existing repo, user mentions they didn't write all of it, or has 50+ source files):
+- Suggest: *"I don't see a conventions file. For a codebase this size, I recommend running `/conventions` first — 60 seconds invested saves 20 minutes of style-drift fixes later. Want to pause `/work` and run that first?"*
+- Wait for user's call. Don't force.
+
+If it's a fresh / small project where the user is setting conventions on the fly: skip the suggestion, conventions will come from Phase 1 answers and the explicit constraints the user articulates.
+
+### Step 2.1 — Ask the user
 
 6. **What files do I need to read to do this work correctly?**
    The user lists files. You confirm by reading them and asking 1-2 clarifying questions about their structure. If the user says "I don't know", scan the repo briefly and propose a list — but it's THEIR judgment that decides.
@@ -39,7 +62,7 @@ Once Phase 1 is complete, ask:
 7. **What constraints from the codebase or team conventions apply?**
    Examples: "follow the pattern in reference module X", "no new dependencies", "must be backwards compatible", "match the existing test style".
 
-   **If this is an unfamiliar codebase to the user**, suggest invoking `/conventions` first. That command produces a structured detection of import style, naming, file organization, error handling, and test patterns from sample files. Without it, generated code drifts from existing patterns. The 60 seconds spent on `/conventions` save 20 minutes of style-drift fixes later.
+   If a conventions file was auto-loaded in Step 2.0, these constraints often complement (not replace) what's already documented there.
 
 ## Phase 3 — Plan
 

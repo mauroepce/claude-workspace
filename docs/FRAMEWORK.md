@@ -51,6 +51,32 @@ When a bug appears — during implementation, in a production log, in a CI alert
 
 The win: stops the "paste error → first fix → next error" loop that accumulates hacks. Your hypothesis matching the diagnosis is also the calibration signal — if you were wildly wrong, the bug points to a deeper misunderstanding worth investigating.
 
+### `/conventions` — codebase convention detection (persistent)
+
+Scans an unfamiliar codebase (config files + 3-5 sampled source files) and produces a structured report of:
+- Import style (ESM vs CJS, path aliases, default vs named)
+- Quoting and formatting (single vs double quotes, semicolons, indentation)
+- Naming conventions (file names, components, constants)
+- File organization (where types live, where tests live, reference modules)
+- Error handling pattern (throw vs Result vs null)
+- Async patterns, test framework, documentation style
+- Anti-pattern audit and honest gaps
+
+**Critical: the report is persisted to a file**, not just printed to chat. By default it writes to `.claude/conventions.md` (committed to the repo, team benefits). Other options:
+- `CONVENTIONS.md` at root — committed, more visible
+- `.claude/conventions.local.md` — gitignored, personal-only (good for client repos, interview prep)
+- Chat-only (only useful for one-shot exploration)
+
+This persistence is what makes `/work` aware of conventions across sessions. Without it, every new conversation would have to re-detect from scratch — wasted time and inconsistent results.
+
+The 60 seconds spent on `/conventions` save 20 minutes of style-drift fixes later in a long session. When you join a new codebase (interview, new team, new client), run this BEFORE any code generation.
+
+### Composition with `/work`
+
+`/work` Phase 2 (Context) automatically looks for `.claude/conventions.local.md`, `.claude/conventions.md`, or `CONVENTIONS.md`. If any is found, it's loaded and respected for any code generated downstream. The user doesn't have to re-paste the report — the file is the persistent context.
+
+If you're starting a fresh project where conventions don't exist yet, `/work` skips this lookup and conventions come from the explicit constraints articulated in the spec phase. As the project grows, you can run `/conventions` at some point and then future `/work` invocations auto-pick it up.
+
 ### `/code-review` — quality review (atomic, reusable)
 
 Quality-focused code review: naming, complexity, pattern adherence, test coverage, edge cases, error handling, performance traps. Output is tiered: must-fix / should-fix / nice-to-have / strengths.
