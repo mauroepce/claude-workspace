@@ -85,6 +85,20 @@ Complements `/conventions`: `/conventions` tells you what the code looks like (s
 
 Use when joining an unfamiliar repo, returning to your own code after months, or preparing for an interview where you'll be questioned on a system you wrote a while ago. Honest about gaps — sections that can't be derived from code are marked "TBD: fill from memory" instead of fabricated.
 
+### `/journeys-diagram` — visual flow documentation
+
+Detects user journeys in a codebase (auth flows, payment flows, main feature actions, webhook processing) and produces Mermaid `sequenceDiagram` for each. Outputs `journeys-diagram.md`.
+
+Why Mermaid: renders natively in GitHub, VS Code with the Mermaid extension, and most modern markdown viewers. No external tool needed. Versions in git just like code.
+
+Why journey diagrams: they answer "when a user does X, what actually happens through the stack?" — the highest-leverage artifact for explaining behavior to humans (interviewers, new team members, your future self). Architecture maps show the parts; journeys show how the parts cooperate over time.
+
+Use to:
+- Prep for interviews where you'll need to walk someone through user flows
+- Onboard a new teammate to an unfamiliar system
+- Document existing behavior before a refactor (so you can prove behavior is preserved)
+- Surface hidden side effects (Postgres triggers, webhook chains, async dispatches)
+
 ### `/decision` — capture a technical decision
 
 Walks the user through 4 questions (decision, alternative, why this won, confidence level 🟢🟡🔴), with an optional 5th about trade-offs. Appends to `decisions-log.md` so the rationale persists across sessions.
