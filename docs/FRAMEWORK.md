@@ -27,6 +27,23 @@ Forces you through a structured intake before any code generation:
 
 The win: the spec and failure modes are written down BEFORE generation, so review has a clear baseline. You can't drift into "while I'm here, let me also..." without noticing.
 
+### `/todo` — persistent task tracking with milestones
+
+Manages tasks that span multiple sessions. Each task has a title, milestones (3-7 typically), optional notes, and a `[FOCUSED]` marker for the active one. Saves to `.claude/todos.md` (committed) or `.claude/todos.local.md` (gitignored).
+
+Complements — does NOT replace — Claude Code's built-in `TodoWrite` tool:
+- `TodoWrite` is **in-session** — the moment-to-moment task list while working
+- `/todo` is **cross-session** — survives when you close Claude Code
+
+Use `/todo` when:
+- A task is too big for one session (interview prep, multi-day refactor, feature build)
+- You'll come back tomorrow and need to remember "where was I?"
+- You're juggling multiple tasks and need to switch focus deliberately
+
+Composition: when `/work` Phase 3 produces a plan with 3+ steps, it suggests persisting them as a `/todo` task. That's the bridge — `/work` for the structured spec, `/todo` for the execution tracker that survives.
+
+Actions: `new`, `done <N>`, `list`, `focus <task>`, `archive`, `delete`. Notes can be appended at any time to capture decisions/blockers/learnings — gold for the "where was I?" moment after a long break.
+
 ### `/issue <number>` — GitHub issue intake
 
 Pulls an issue with `gh`, structures the context, surfaces what's NOT defined in the issue body, asks for additional context only you have, optionally creates a branch, and hands off to `/work`.
