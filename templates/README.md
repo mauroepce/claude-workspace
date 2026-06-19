@@ -68,6 +68,26 @@ That voice-over does two things:
 - Copy + adapt
 - If you find yourself adapting the same way 3 times, the template should be updated
 
+### About the teaching comments
+
+Templates include extensive `// Why X: ...` style comments that explain reasoning. These are intentional — they encode the WHY behind each pattern.
+
+**In an interview**: keep them. They demonstrate that the code reflects deliberate decisions, not "claude wrote it."
+
+**In production code shipping to a team**: strip them after your first read. The pattern is now in your head; the comments are noise for everyone else.
+
+A quick way to strip:
+
+```bash
+# Remove single-line comments starting with "// "
+sed -i.bak '/^[[:space:]]*\/\/ /d' src/path/to/file.ts
+
+# Remove block comments matching teaching style (// ─── ... ───)
+# Open in editor and search-replace: ^// ─.*$ → (empty)
+```
+
+Don't strip the multi-line block comments at the top of files that document dependencies and usage — those are useful long after.
+
 ### To update a template
 
 The source of truth is `claude-workspace/templates/`. Edit there, commit, re-run `install-personal.sh` on any machine.
