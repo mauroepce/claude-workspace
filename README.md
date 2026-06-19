@@ -1,253 +1,104 @@
-# Claude Workspace
+# claude-workspace
 
-> **Persistent context for AI agents.** Stop re-explaining your project every session.
+> Mauricio's personal toolkit for working with Claude Code at senior level.
 
-A structured workspace template that gives Claude (or any AI agent) the context it needs to **resume your work across sessions** — instead of starting from zero every time.
+12 slash commands + a curated templates library, installable into your `~/.claude/` with one curl command. Layer on top of any project — new or existing, personal or team-owned — without touching the project's repo.
 
----
+## What it is
 
-## The problem this solves
+A codified senior workflow with five core principles:
 
-| Without it | With it |
-|------------|---------|
-| 🔁 Every session starts from zero — you re-explain everything | 🧠 Claude reads your context automatically on day 1, day 30, day 365 |
-| 🤔 "Why did I choose X over Y again?" | 📝 Decisions logged with the **why** — not just the choice |
-| 📅 Picking up after 2 weeks = lose half a day re-orienting | ⏱️ Read `STATUS.md`, up to speed in 5 minutes |
-| 🌀 Multiple projects bleeding context into each other | 📁 Per-subproject conventions, never confused |
-| ⚠️ You forget to update notes / journal | 🤖 Claude maintains `STATUS.md` for you, automatically |
+1. **Spec before generation** — every task starts with a structured spec, not "hey claude write me X"
+2. **Critical review of agent output** — never accept a first response, treat output like a junior's PR
+3. **Persistent context** — conventions, architecture, decisions, todos all live in version-controlled files, not in chat history
+4. **Workflow as artifact** — when a prompt repeats 3 times, it becomes a slash command
+5. **Atomic commands compose** — small commands you can invoke standalone, or chain into orchestrators like `/safe-commit`
 
----
-
-## Quick start (~90 seconds)
-
-**Starting a new project:**
-
-```bash
-# Click "Use this template" on GitHub, or:
-gh repo create my-workspace --template mauroepce/claude-workspace --public --clone
-cd my-workspace
-# Open in Claude Code, then in chat:  /setup
-```
-
-**Adding to an existing project:**
-
-```bash
-cd path/to/your/existing/project
-curl -fsSL https://raw.githubusercontent.com/mauroepce/claude-workspace/main/bin/install.sh | bash
-# Open in Claude Code, then in chat:  /setup
-```
-
-`/setup` interviews you (~7 questions, multi-language) and personalizes the workspace.
-
----
-
-## What you get
-
-🧠 **Persistent memory across sessions** — Claude auto-loads `CLAUDE.md` on every chat, so your context never resets.
-
-📁 **Multiple subprojects without bleed** — each project has its own folder with its own `CLAUDE.md` and `STATUS.md`. Claude knows which one you're in.
-
-✍️ **Claude maintains STATUS.md for you** — at the end of every productive session, the agent updates the live state automatically. No discipline required.
-
-🌍 **Multi-language** — setup runs in English, Español, Português, Français, or any language. All generated files match.
-
-🎨 **5 presets** — pick what fits: research, product portfolio, knowledge, consulting, or fully custom.
-
-📦 **Versioned in git, no SaaS** — your context lives next to your code. Works offline. Survives any tool change.
-
----
-
-## Use cases
-
-| Preset | Best for | Subprojects live in |
-|--------|----------|---------------------|
-| 🔬 **Research** | Academic experiments, papers | `experiments/` |
-| 📦 **Product** | MVP / startup portfolio | `apps/` |
-| 📚 **Knowledge** | Personal notes, learning | `notes/` |
-| 💼 **Consulting** | Multiple clients | `clients/` |
-| 🛠️ **Custom** | Anything else (7-question wizard) | your choice |
-
-Each preset comes with a tailored `STATUS.md` skeleton (e.g., research → hypothesis/method/results; product → lifecycle/TODOs/decisions).
-
----
-
-## Commands
-
-### Workspace commands (project-level, installed by `/setup`)
-
-| Command | What it does |
-|---------|--------------|
-| `/setup` | First-run interview. Configures the workspace. |
-| `/new-project <name>` | Add a new subproject with its `CLAUDE.md` and `STATUS.md`. |
-| `/status` | Summary of all subprojects with their open TODOs. |
-| `/checkpoint` | Force-update active subproject's `STATUS.md` mid-session. |
-
-### Personal commands (user-level, install once, available everywhere)
-
-These layer on top of any project, including team repos where you don't control the workspace setup. Install once with:
+## Install
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/mauroepce/claude-workspace/main/bin/install-personal.sh | bash
 ```
 
+This installs:
+- 12 slash commands to `~/.claude/commands/`
+- 9 code templates to `~/.claude/templates/`
+
+Idempotent — re-run anytime to update. Backs up your modified files to `*.bak` before replacing.
+
+## Quick reference
+
 | Command | What it does |
-|---------|--------------|
-| `/work [task]` | Spec → generate → review → iterate framework. Forces structured intake before code generation. |
-| `/issue <number>` | Pull a GitHub issue with `gh`, structure its context, hand off to `/work`. |
-| `/debug` | Hypothesis-driven debugging: forces you to predict the cause, decide scope (in-spec vs separate), fix root cause not symptom, add regression test. |
-| `/safe-commit` | Security review on staged changes + commit message tied to the spec. Refuses unsafe commits. |
-| `/safe-push` | Full-branch security review + tests + push. Refuses to push to `main` without explicit OK. |
+|---|---|
+| `/work` | Spec-first task framework: spec → context → plan → implement → review |
+| `/quick-work` | Lite version of `/work` for small tasks (single-file edits, fixes) |
+| `/todo` | Persistent task tracking with milestones, survives across sessions |
+| `/issue <N>` | Pull a GitHub issue, structure its context, hand off to `/work` |
+| `/debug` | Hypothesis-driven debugging: root cause over symptom |
+| `/conventions` | Scan codebase for style patterns, persist to `.claude/conventions.md` |
+| `/architecture` | Scan codebase structure, persist to `.claude/architecture-map.md` |
+| `/journeys` | Detect user flows, produce Mermaid sequence diagrams |
+| `/decision` | Capture a technical decision with alternatives + confidence level |
+| `/code-review` | Quality review of staged changes (atomic, reusable) |
+| `/safe-commit` | `/code-review` + `/security-review` + commit with confirmation |
+| `/safe-push` | Full-branch review + push (refuses main without OK) |
+| `/scaffold` | Pick from curated code templates, insert adapted to context |
+| `/onboard` | Joining a new codebase: runs `/conventions` + `/architecture` + `/journeys` |
+| `/commands` | List all installed personal commands with their descriptions |
 
-The methodology behind these four commands is documented in [`docs/FRAMEWORK.md`](./docs/FRAMEWORK.md).
+Full methodology and command details in [`docs/FRAMEWORK.md`](./docs/FRAMEWORK.md).
 
----
+## How layering works
 
-<details>
-<summary><b>📐 The architecture (4-file pattern)</b></summary>
+Personal commands live in `~/.claude/commands/`. They're available in **any project you open with Claude Code** — your own repos, client repos, team repos where you don't control configuration.
 
-<br>
+If a project has its own `.claude/commands/` with a same-named command, **the project version wins**. Your personal commands fill the gaps without overriding team conventions.
 
-```
-your-workspace/
-├── CLAUDE.md              ← Global conventions. Auto-loaded by Claude.
-├── INDEX.md               ← One-line index of all subprojects.
-└── apps/
-    ├── project-a/
-    │   ├── CLAUDE.md      ← Conventions for this subproject. Auto-loaded.
-    │   └── STATUS.md      ← Live state. Maintained by Claude.
-    └── project-b/
-        ├── CLAUDE.md
-        └── STATUS.md
-```
+This means:
+- Use my framework freely in new projects
+- Inherit your personal workflow when joining team repos
+- Zero friction: nothing to commit to a team's repo just to use my toolkit
 
-**Two layers of `CLAUDE.md`** — root for global, subproject for local. Both auto-loaded based on where you're working.
+## Templates
 
-**`STATUS.md` is the live journal** — current TODOs, decisions with the *why*, blockers waiting on input. Mutable.
+The `~/.claude/templates/` library contains 9 working code files with my conventions baked in (TypeScript strict, Zod validation at boundaries, error class hierarchies, async retry with jitter, Result types, etc.).
 
-**`INDEX.md` is the bird's-eye view** — one row per subproject, links to its `STATUS.md`.
-
-Full details in [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md).
-
-</details>
-
-<details>
-<summary><b>🚀 Setup walkthrough — new project (Flow A)</b></summary>
-
-<br>
-
-#### Step 1 — "Use this template" on GitHub
-
-Click the green button on the repo page → enter your repo name → GitHub clones the template into your account.
-
-You end up with `github.com/your-user/<your-repo>` containing all template files.
-
-#### Step 2 — Clone and open
+Use them via `/scaffold` or read directly:
 
 ```bash
-git clone https://github.com/your-user/<your-repo>.git
-cd <your-repo>
+ls ~/.claude/templates/
+cat ~/.claude/templates/backend/nest-controller.ts
 ```
 
-Open in Claude Code (or VSCode + Claude extension).
+Templates include teaching comments by default — they explain the WHY of each pattern. Strip them once you've internalized the pattern.
 
-#### Step 3 — Type `/setup`
+## Update
 
-The interview asks ~7 questions:
-- Language → "Español"
-- Workspace name → "phd-thesis"
-- Type → "Research / Product / Knowledge / Consulting / Custom"
-- Subproject directory → defaulted by preset
-- Subproject noun → "experiment", "MVP", "client"…
-- Custom rules → free text
-- Extra commands → optional
-
-Claude personalizes all files based on your answers.
-
-#### Step 4 — Create your first subproject
-
-```
-/new-project my-first-thing
-```
-
-Done. Start working.
-
-</details>
-
-<details>
-<summary><b>🔧 Setup walkthrough — existing project (Flow B)</b></summary>
-
-<br>
-
-For when you already have a project on disk and want to layer the pattern on top, **without losing anything**.
-
-#### Step 1 — Go to your project
+Re-run the install command to pull the latest version of all commands and templates:
 
 ```bash
-cd ~/path/to/existing/project
+curl -fsSL https://raw.githubusercontent.com/mauroepce/claude-workspace/main/bin/install-personal.sh | bash
 ```
 
-#### Step 2 — Run the installer
+Your modified files get backed up to `*.bak`. New/changed files get installed.
+
+## Uninstall
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/mauroepce/claude-workspace/main/bin/install.sh | bash
+rm -rf ~/.claude/commands/{work,quick-work,todo,issue,debug,conventions,architecture,journeys,decision,code-review,safe-commit,safe-push,scaffold,onboard,commands}.md
+rm -rf ~/.claude/templates/
 ```
-
-Piece by piece:
-
-| Piece | Meaning |
-|-------|---------|
-| `curl` | Downloads files from the internet via terminal |
-| `-fsSL` | Silent, follow redirects, fail on error |
-| `\|` (pipe) | Passes the downloaded content to the next command |
-| `bash` | Runs the script |
-
-In plain English: **"Download the install script and run it here."**
-
-The script:
-- Adds `.claude/commands/`, `_templates/`, `docs/ARCHITECTURE.md`
-- Creates `CLAUDE.md` and `INDEX.md` only if you don't have them already
-- **Doesn't touch your existing code**
-- Backs up any conflicts to `*.bak`
-
-#### Step 3 — Type `/setup`
-
-If you already had a `CLAUDE.md`, the setup detects it and asks:
-
-> "I see you already have a CLAUDE.md with content. Want me to (a) prepend workspace conventions, (b) append, (c) replace (with backup), or (d) skip — leave it alone and just configure the rest?"
-
-</details>
-
-<details>
-<summary><b>💡 Philosophy & honest limitations</b></summary>
-
-<br>
-
-### Why this works
-
-The pattern combines:
-- **Anthropic's `CLAUDE.md` convention** — auto-loaded by Claude Code based on the directory you're in.
-- **Slash commands** in `.claude/commands/` — to encode workflows as reusable scripts.
-- **Discipline of "decisions with the *why*"** — the most valuable thing in long-running projects.
-
-### Limitations (be honest with yourself)
-
-- **Not magic.** Claude updates `STATUS.md` proactively, but if no meaningful work happened, nothing gets logged. You still need to *do* the work.
-- **Overhead for tiny things.** If you're writing a 50-line script you'll finish in an hour, this is overkill.
-- **Tied to Claude Code semantics.** The `CLAUDE.md` filename is Anthropic's convention. If you switch agents, files still work but auto-loading depends on the new tool.
-- **You're still in control.** The agent maintains state, but decisions are yours. The workspace is a memory aid, not autopilot.
-
-### When NOT to use it
-
-- One-off scripts or quick prototypes.
-- Single-file projects.
-- When you genuinely want a fresh context every time (rare, but valid for some kinds of brainstorming).
-
-</details>
-
----
 
 ## License
 
-MIT — see [`LICENSE`](./LICENSE).
+[MIT](./LICENSE) — use freely. If you find the methodology useful, fork and adapt to your own style.
 
-Made by [@mauroepce](https://github.com/mauroepce). Issues and PRs welcome.
+## Why this exists
+
+In 2026 the bottleneck of senior engineering is no longer typing speed — it's **directing the model with judgment**. That requires repeatable workflows, explicit reasoning, persistent context, and atomic tools that compose.
+
+This toolkit is my attempt at that. It's opinionated. It's a personal style, not a universal best practice. But it's been refined through real work — production code at TeselaGen Biotechnology, a SaaS factory (Revenue Lab), portfolio pieces at [mauroepce.dev](https://mauroepce.dev), and weekly job application screens.
+
+If you've felt the gap between "I use Cursor" and "I have a workflow," this is what closing that gap can look like.
+
+— [@mauroepce](https://github.com/mauroepce)
