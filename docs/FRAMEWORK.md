@@ -91,6 +91,19 @@ Use on day one in a new repo (interview prep, new team, client handoff) or when 
 
 This is the meta-command. The three sub-commands stay atomic and invokable independently, but for the day-one experience this single invocation is the right entry point.
 
+#### `/isolate` — clean workspace for tests and interviews
+
+Creates an isolated workspace (`/tmp/<name>` or `~/Desktop/interviews/<name>`) with a CLAUDE.md override that prevents Claude Code from walking up the directory tree and picking up context from unrelated projects.
+
+The failure this prevents: when a technical test lives inside a monorepo (e.g., `revenue-lab/apps/prueba-carvuk/`), Claude Code auto-loads every `CLAUDE.md` and `.claude/` config in ancestor directories. That leaks patterns, naming conventions, and skills from unrelated projects into the test output. Reviewers then see "why does this candidate's take-home reference tables from another project?" and it reads as sloppy.
+
+Use when:
+- Starting a technical take-home for a company
+- Preparing for a live-coding interview
+- Any scratch experiment where ambient context would confuse output
+
+Also initializes git (optional) and warns about ancestor CLAUDE.md files that might still leak in even in the isolated location.
+
 ### Debugging and decisions
 
 #### `/debug` — hypothesis-driven debugging

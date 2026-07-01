@@ -75,7 +75,21 @@ Plan:
 3. <step>
 Estimated change surface: <files X, Y, Z>
 What I'm NOT touching: <files A, B, C>
+
+FIRST FUNCTIONAL SLICE:
+- What: <the smallest end-to-end user-visible increment>
+- When: after step <N> above
+- What it lets the user do: <concrete action they can perform>
+- What it does NOT include yet: <the features still coming>
 ```
+
+**The "First Functional Slice" is non-negotiable — even for internal work, even for refactors.** The reasoning: shipping *something visible* fast forces you to prove the plumbing works before layering complexity. If the task is under time pressure (interview, demo, tight deadline), this slice must be shippable in **20% of the total available time**. If you can't articulate a slice under that budget, the plan is too monolithic and needs decomposition.
+
+Examples of what a "first functional slice" looks like:
+- Building a checkout: the slice is a hardcoded "hello" that renders on the checkout route with the layout in place.
+- Adding a new endpoint: the slice is a 200 OK response with mocked data at the correct URL shape.
+- Migrating an ORM: the slice is one table read + one table write working with the new ORM, gated behind a flag.
+- Fixing a bug: the slice is a failing test that reproduces the bug (before the fix), so the fix has a clear success signal.
 
 **Wait for the user to approve the plan.** If they revise, update and re-confirm.
 

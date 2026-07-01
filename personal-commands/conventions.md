@@ -93,6 +93,22 @@ For each category, report what you actually observed (not what you'd recommend):
 ### Documentation
 - JSDoc on public functions? Sparse comments? README-driven?
 
+### Language consistency (critical)
+
+Detect the working language of the code and flag mixing:
+
+- **Code identifiers** (variables, functions, classes, files): what language? English, Spanish, mixed?
+- **Database identifiers** (tables, columns): what language?
+- **Comments**: what language?
+- **UI strings** (JSX text, i18n keys): what language?
+
+**Compare the four axes and surface any mismatch.** The common failures:
+- English code + Spanish DB (tables `productos`, `boletas`; columns `precio`, `fecha`) → reads as junior; a senior would either standardize on English (industry default) or on Spanish (rare but consistent).
+- Spanish comments in English code → OK for personal projects, problematic for team codebases.
+- Spanish UI strings + Spanish DB but English code → common in LATAM startups; usually OK if intentional and the boundary is clean (i18n layer for UI, code stays English).
+
+**The rule to enforce**: keep language consistent within each axis, and be intentional about crossings (only at boundaries — e.g., i18n layer). Random mixing (e.g., `Producto` type + `getProducts()` function + `.select("precio")` query in the same file) is a hard "should-fix".
+
 ## Phase 4 — Output
 
 Produce a structured report in this format. Save it to a temporary working memory the user can reference — and offer to write it to `CONVENTIONS.md` if the project has one or wants one.
@@ -142,6 +158,14 @@ TESTS
 
 DOCUMENTATION
 - Style: <observation>
+
+LANGUAGE CONSISTENCY
+- Code identifiers: <English / Spanish / mixed>
+- DB identifiers: <English / Spanish / mixed>
+- Comments: <English / Spanish / mixed>
+- UI strings: <English / Spanish / mixed>
+- Mismatches to flag: <e.g., "Spanish DB columns in English code — pick one">
+- Verdict: <consistent / inconsistent — action needed>
 
 ═══════════════════════════════════════════════════════════
 ANTI-PATTERN AUDIT (things to AVOID in this codebase)

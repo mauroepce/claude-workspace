@@ -71,6 +71,19 @@ For each changed file, evaluate against these categories. Don't fabricate findin
 - Are dates/timezones handled correctly?
 - Is sensitive data logged?
 
+### Separation of concerns (critical for frontend + fullstack code)
+
+- **HTTP calls inside UI components**: any `fetch()`, `axios.*()`, `supabase.from()` etc. called directly from a React/Vue/Svelte component? That's a should-fix. HTTP belongs in a hook, service, or Server Action, NEVER in the component body. Component only knows about the mutation function it invokes.
+- **Direct DB access from route handlers without a repository layer**: OK for small apps, problematic once the app has 3+ tables. Flag as nice-to-have unless the file already shows a service pattern used elsewhere (then it's must-fix for consistency).
+- **Business logic in serializers / DTOs**: transformers should NOT compute; they map.
+- **Presentation logic in data models**: if a Prisma/Drizzle model has methods that format prices for display, that's misplaced. Move to a view helper.
+- **Cross-concern imports**: a component importing directly from `db/schema.ts`, or a service importing a React component. These are architectural leaks worth flagging.
+
+The pattern to hold: **flow is one-way**. Component → hook/Server Action → service → repository → DB. Any shortcut (component → DB, component → service directly for HTTP) breaks refactorability.
+
+### Language consistency
+- If the codebase is English but this diff introduces Spanish identifiers (or vice versa), flag as should-fix. See `/conventions` output for the codebase's convention. Random mixing (Spanish DB columns + English code + Spanish comments) creates ongoing cognitive tax.
+
 ## Phase 4 — Output
 
 Present findings in this exact format. Be honest about severity.
