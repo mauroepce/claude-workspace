@@ -167,6 +167,53 @@ echo "  /commands     — list installed personal commands"
 echo ""
 echo "Templates browseable: ls ~/.claude/templates/"
 echo ""
+
+# ─── Offer to apply trust-boundary defenses ──────────────────────────────────
+# The framework's slash commands (/work, /safe-commit, /safe-push, /debug) rely
+# on Claude Code's AskUserQuestion tool blocking indefinitely for user input.
+# Claude Code v2.1.198-199 broke that assumption silently. To defend against
+# future silent changes, apply explicit config + env var overrides.
+# See docs/FRAMEWORK.md § "Trust boundaries with Claude Code as a dependency".
+
+echo "─────────────────────────────────────────────────────────────────────────"
+echo "Optional: apply trust-boundary defenses to ~/.claude/settings.json"
+echo ""
+echo "The framework's confirmation gates (/work, /safe-commit, /safe-push, /debug)"
+echo "assume AskUserQuestion blocks until you respond. This applies explicit"
+echo "config to defend against silent changes in Claude Code's default behavior."
+echo ""
+echo "Changes: askUserQuestionTimeout='never', CLAUDE_AFK_TIMEOUT_MS=huge,"
+echo "DISABLE_AUTOUPDATER=1. Backs up existing settings.json first."
+echo "─────────────────────────────────────────────────────────────────────────"
+
+# Only prompt if we have a TTY (skip in headless CI installs)
+if [ -t 0 ] && [ -t 1 ] && [ -e /dev/tty ]; then
+  read -r -p "Apply trust-boundary defenses now? (y/N) " apply_reply < /dev/tty || apply_reply="n"
+  case "$apply_reply" in
+    [yY]|[yY][eE][sS])
+      # Download and run the apply script (idempotent, safe)
+      apply_url="${RAW}/bin/apply-trust-defenses.sh"
+      tmp_apply="$(mktemp)"
+      if curl -fsSL "$apply_url" -o "$tmp_apply"; then
+        chmod +x "$tmp_apply"
+        "$tmp_apply" --yes
+        rm -f "$tmp_apply"
+      else
+        echo "  ⚠ Failed to download apply-trust-defenses.sh. Skipping."
+        echo "  You can run it manually later: bash <(curl -fsSL $apply_url) --yes"
+      fi
+      ;;
+    *)
+      echo "  Skipped. Run later with: bash <(curl -fsSL ${RAW}/bin/apply-trust-defenses.sh) --yes"
+      ;;
+  esac
+else
+  echo "  (Non-interactive install detected — skipping. Run manually to apply.)"
+fi
+
+echo ""
+echo "Verify at any time: bash <(curl -fsSL ${RAW}/bin/verify-claude-config.sh)"
+echo ""
 echo "To update: re-run this script."
 echo "To uninstall: rm -rf ~/.claude/commands/{work,quick-work,todo,issue,debug,conventions,architecture,journeys,decision,code-review,safe-commit,safe-push,scaffold,onboard,isolate,commands}.md ~/.claude/templates/"
 echo ""

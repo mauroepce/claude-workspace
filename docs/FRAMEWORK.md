@@ -211,6 +211,79 @@ The orchestrator and the atoms coexist. Use the atom when you need surgical feed
 
 The implicit rule: persist your codebase artifacts (conventions, architecture, journeys, decisions) once, and they ambient-flow into subsequent work. That's the persistence-as-context-engineering idea distilled.
 
+## Trust boundaries with Claude Code as a dependency
+
+The framework is a **layer built on top of Claude Code**. Every safety gate — `/work` Phase 1 spec questions, `/safe-commit` confirmation, `/safe-push` production checks, `/debug` hypothesis capture — depends on Claude Code's `AskUserQuestion` tool blocking indefinitely until the user responds.
+
+### The failure mode this section defends against
+
+In July 2026, Claude Code versions 2.1.198 and 2.1.199 shipped an undocumented change: `AskUserQuestion` would **auto-continue after 60 seconds of user silence**, using the model's best-guess answer instead of blocking. The feature had:
+
+- No entry in the release notes
+- No opt-out setting exposed in `/config`
+- An off-switch (`CLAUDE_AFK_TIMEOUT_MS` env var) that was undocumented and discovered only through community discussion
+
+Anthropic reverted the default in 2.1.200+ (auto-continue is now opt-in via `askUserQuestionTimeout` config, default `never`), but the episode revealed a class of risk that cannot be ignored: **a silent change in the platform can silently degrade every safety gate built on top of it.**
+
+Attribution: this class of risk was documented in detail by Olaf Alders in [Claude Code: Anatomy of a Misfeature](https://www.olafalders.com/2026/07/17/claude-code-anatomy-of-a-misfeature/) (2026-07-17). The framework's defense is a direct response to that analysis.
+
+### The three defenses this framework applies
+
+To make the layer beneath the framework predictable regardless of future platform changes:
+
+**1. Explicit config (defends against future default drift)**
+
+```json
+{ "askUserQuestionTimeout": "never" }
+```
+
+Written into `~/.claude/settings.json`. Even if Anthropic changes the default in a future version, an explicit value in the user's config wins.
+
+**2. Env var override (belt-and-suspenders)**
+
+```json
+{ "env": { "CLAUDE_AFK_TIMEOUT_MS": "9999999999" } }
+```
+
+Env vars in `settings.json` override config settings in Claude Code's precedence order. If a future version renames the config field or changes its type, the env var still holds the line.
+
+**3. Disable auto-updates (control the transition)**
+
+```json
+{ "env": { "DISABLE_AUTOUPDATER": "1" } }
+```
+
+Prevents Claude Code from auto-updating mid-session through a known-bad or known-changed version. The user chooses when to update and can verify config after each version bump.
+
+### Two scripts codify this
+
+**`bin/verify-claude-config.sh`** — read-only diagnostic
+
+Runs six checks: Claude Code version (warns on 2.1.198-199), the three defense values, and framework install integrity (commands + templates). Exit code 0 if all pass, 1 for warnings, 2 for critical issues. Safe to run in CI or as a pre-work sanity check.
+
+**`bin/apply-trust-defenses.sh`** — idempotent config setter
+
+Reads current `~/.claude/settings.json`, merges the three defenses using `jq` (preserves all other fields — permissions, model, effortLevel, etc.), backs up the original with a timestamped filename, and writes atomically. Safe to run multiple times.
+
+`bin/install-personal.sh` offers to run `apply-trust-defenses.sh` at the end of the install flow. It is opt-in — the user must confirm at a `y/N` prompt. Non-interactive installs (CI) skip the prompt.
+
+### Ongoing discipline
+
+- After every Claude Code version update, run `bin/verify-claude-config.sh` in a fresh terminal
+- After every install of the framework on a new machine, run both scripts
+- If Anthropic ships a new version-specific bug that affects framework guarantees, add a new check to `verify-claude-config.sh` and a new default to `apply-trust-defenses.sh` — this file will grow over time; treat it like a security advisory log
+
+### The generalizable principle
+
+The failure in July 2026 was not "Anthropic shipped a bad feature." It was "a silent change in the platform silently broke user-visible guarantees." Any framework built on top of a platform inherits this risk. The defenses are the framework's answer:
+
+- **Explicit over implicit** — pin every value the framework depends on, in a versioned file
+- **Multi-layer defense** — config + env var + auto-update disabled, so no single change vector can silently break the guarantees
+- **Automated verification** — a check script prevents drift from going undetected
+- **Documented rationale** — this section exists so future maintainers understand why the config looks paranoid
+
+The same principle scales to any critical vendor dependency: databases, payment providers, auth services. The framework as of July 2026 codifies it for Claude Code specifically.
+
 ## The mental model
 
 Three principles that survive any change in tooling:

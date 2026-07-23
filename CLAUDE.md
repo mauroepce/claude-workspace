@@ -55,6 +55,19 @@ claude-workspace/
 - **Markdown files**: prefer GitHub-flavored markdown features. Mermaid diagrams in fences. Tables for lists with multiple attributes.
 - **Co-Authored-By: Claude**: include in commits TO THIS REPO (this is Mauricio's personal toolkit, transparency about AI authorship is the point). Do NOT include in commits to other repos he works on (those have their own rules).
 
+## Trust boundary with Claude Code as a dependency
+
+This framework's slash commands (`/work`, `/safe-commit`, `/safe-push`, `/debug`, etc.) depend on Claude Code's `AskUserQuestion` tool blocking indefinitely until the user responds. Any silent change in that behavior degrades framework guarantees.
+
+Two scripts codify the defense:
+
+- `bin/verify-claude-config.sh` — read-only check of current Claude Code config
+- `bin/apply-trust-defenses.sh` — idempotent config setter (adds `askUserQuestionTimeout: never`, huge `CLAUDE_AFK_TIMEOUT_MS`, `DISABLE_AUTOUPDATER: 1`)
+
+`bin/install-personal.sh` offers to run `apply-trust-defenses.sh` opt-in at the end of install.
+
+When editing anything related to `AskUserQuestion` behavior expectations, cross-reference `docs/FRAMEWORK.md § Trust boundaries with Claude Code as a dependency`.
+
 ## What this repo is NOT
 
 - Not a generic claude-code workflow template (it's opinionated to Mauricio's style)
