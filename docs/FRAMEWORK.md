@@ -291,6 +291,24 @@ The failure in July 2026 was not "Anthropic shipped a bad feature." It was "a si
 
 The same principle scales to any critical vendor dependency: databases, payment providers, auth services. The framework as of July 2026 codifies it for Claude Code specifically.
 
+## Deterministic gates: the commit hook
+
+The trust-boundary section above defends the framework's gates against *platform* changes. This section removes a weaker link: the gates themselves were prompts, and a prompt is a request the model can miss. A hook is code the harness always runs.
+
+**The gate:** `hooks/commit-gate.sh`, registered as a `PreToolUse` hook (matcher: `Bash`) in `~/.claude/settings.json` by `bin/install-hooks.sh`. Before executing any Bash tool call, the harness pipes the call's JSON to the script. If the command is a `git commit`, the script verifies a review receipt:
+
+- `/code-review` Phase 6 writes `.claude/review-passed` containing the hash of the exact staged diff it reviewed (`git diff --cached | git hash-object --stdin`).
+- The gate recomputes the hash at commit time. Receipt missing, or hash mismatch (something was staged after the review) → exit code 2 → the commit is **blocked** and the error message is fed back to Claude, which then runs `/code-review` instead of committing blind.
+
+**Properties:**
+
+- *Deterministic* — "never commit unreviewed code" no longer depends on the model following instructions. The check runs on every Bash call, in every session, in every project.
+- *Precise* — the receipt is tied to the diff content, not to a timestamp. Reviewing, then sneaking in one more staged change, invalidates the receipt.
+- *Fail-open* — no jq, not a git repo, nothing staged: the gate allows the action. It defends against forgetting review, not against an adversary with shell access.
+- *Human escape hatch* — `SKIP_REVIEW_GATE=1 git commit ...` bypasses the gate. It exists for humans in emergencies; `/safe-commit` explicitly forbids the model from using it.
+
+Install: `bash <(curl -fsSL https://raw.githubusercontent.com/mauroepce/claude-workspace/main/bin/install-hooks.sh)` — idempotent, backs up `settings.json` before merging the entry.
+
 ## The mental model
 
 Three principles that survive any change in tooling:

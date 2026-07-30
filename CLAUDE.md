@@ -14,7 +14,9 @@ The audience is Mauricio and anyone who finds the methodology useful enough to i
 claude-workspace/
 ├── skills/<name>/SKILL.md  Source of truth for the skills (one folder per skill)
 ├── templates/              Source of truth for the code templates
+├── hooks/commit-gate.sh    Deterministic commit gate (PreToolUse hook)
 ├── bin/install-personal.sh Idempotent installer (downloads from this repo to ~/.claude/)
+├── bin/install-hooks.sh    Installs the commit gate into ~/.claude/settings.json
 ├── bin/validate-commands.sh Sanity check (frontmatter is well-formed)
 ├── docs/FRAMEWORK.md       Canonical doc — methodology + every skill explained
 ├── README.md               Brief intro for visitors, install instructions

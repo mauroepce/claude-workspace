@@ -28,6 +28,14 @@ This installs:
 
 Idempotent — re-run anytime to update. Backs up your modified files to `*.bak` before replacing. Legacy slash-command files from pre-skills versions (`~/.claude/commands/<name>.md`) are cleaned up automatically.
 
+### Optional: the deterministic commit gate
+
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/mauroepce/claude-workspace/main/bin/install-hooks.sh)
+```
+
+Registers a `PreToolUse` hook that **physically blocks `git commit`** unless `/code-review` reviewed the exact staged diff (it writes a hash receipt to `.claude/review-passed`). The framework's "never commit unreviewed code" rule stops being a prompt the model follows and becomes code the harness enforces. Details in [`docs/FRAMEWORK.md`](./docs/FRAMEWORK.md#deterministic-gates-the-commit-hook). Requires `jq`.
+
 ## Quick reference
 
 | Command | What it does |

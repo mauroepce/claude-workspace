@@ -99,6 +99,8 @@ git commit -m "<subject>" -m "<body>"
 
 **Never use `--no-verify`.** If a hook fails, surface the failure and ask the user how to handle it. Don't bypass hooks.
 
+**If the commit is blocked by the framework's commit gate** (message mentions `COMMIT GATE` / `.claude/review-passed`): the staged diff no longer matches the last review — something was staged after Phase 2. Do NOT use the `SKIP_REVIEW_GATE` override; re-run `/code-review` so the receipt covers exactly what is being committed, then retry.
+
 ## Phase 6 — Confirmation
 
 After commit succeeds:
