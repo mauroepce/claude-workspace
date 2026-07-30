@@ -18,13 +18,33 @@ A codified senior workflow with five core principles:
 
 ## Install
 
+### Option A — as a plugin (recommended for new installs)
+
+Inside any Claude Code session:
+
+```
+/plugin marketplace add mauroepce/claude-workspace
+/plugin install claude-workspace@mauroepce
+```
+
+This repo is its own [plugin marketplace](./.claude-plugin/marketplace.json). The plugin ships the 16 skills, the `code-reviewer` subagent AND the commit-gate hook as one managed unit — versioned installs, one-command updates (`/plugin marketplace update mauroepce`), clean uninstall from `/plugin`.
+
+Trade-offs vs the curl installer:
+- Plugin skills are namespaced: `/claude-workspace:work` instead of `/work` (auto-invocation by description works identically either way).
+- Code templates are NOT part of the plugin — get them with the curl installer below or copy `templates/` manually.
+
+### Option B — curl installer (bare `/name` commands + templates)
+
 ```bash
 curl -fsSL https://raw.githubusercontent.com/mauroepce/claude-workspace/main/bin/install-personal.sh | bash
 ```
 
 This installs:
-- 16 skills to `~/.claude/skills/<name>/SKILL.md`
-- 9 code templates to `~/.claude/templates/`
+- 16 skills to `~/.claude/skills/<name>/SKILL.md` (invoked as bare `/work`, `/conventions`, ...)
+- 9 code templates + 1 CI workflow template to `~/.claude/templates/`
+- The `code-reviewer` subagent to `~/.claude/agents/`
+
+Pick ONE option — installing both gives you every skill twice (`/work` and `/claude-workspace:work`).
 
 Idempotent — re-run anytime to update. Backs up your modified files to `*.bak` before replacing. Legacy slash-command files from pre-skills versions (`~/.claude/commands/<name>.md`) are cleaned up automatically.
 

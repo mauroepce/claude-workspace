@@ -338,6 +338,21 @@ The layering, complete:
 | Commit gate (hook) | your machine, every session | no unreviewed diff enters history locally |
 | CI review | GitHub, every PR | no unreviewed diff merges, even without you |
 
+## Distribution: the repo is a plugin and its own marketplace
+
+`.claude-plugin/plugin.json` declares this repo as a Claude Code **plugin** (skills, the reviewer subagent, and the commit-gate hook, auto-discovered from `skills/`, `agents/` and `hooks/hooks.json`). `.claude-plugin/marketplace.json` makes the same repo a **marketplace** — a git repo listing installable plugins; no central store involved.
+
+Install UX for anyone (including future-you on a new machine):
+
+```
+/plugin marketplace add mauroepce/claude-workspace
+/plugin install claude-workspace@mauroepce
+```
+
+Compared to the curl installer: versioned installs, one-command updates, clean uninstall, and the hook ships wired (no `bin/install-hooks.sh` needed — `hooks/hooks.json` references the script via `${CLAUDE_PLUGIN_ROOT}`). The trade-offs: plugin skills are namespaced (`/claude-workspace:work` instead of bare `/work` — auto-invocation is unaffected), and code templates stay outside the plugin (curl installer or manual copy).
+
+Both paths remain supported. The curl installer is the muscle-memory path (bare `/name`, templates included); the plugin is the managed path.
+
 ## The mental model
 
 Three principles that survive any change in tooling:

@@ -12,10 +12,13 @@ The audience is Mauricio and anyone who finds the methodology useful enough to i
 
 ```
 claude-workspace/
+├── .claude-plugin/         plugin.json + marketplace.json — this repo IS a
+│                           Claude Code plugin and its own marketplace
 ├── skills/<name>/SKILL.md  Source of truth for the skills (one folder per skill)
-├── templates/              Source of truth for the code templates
+├── templates/              Source of truth for the code templates (NOT in the plugin)
 ├── agents/<name>.md        Subagents (code-reviewer: clean context, no write tools)
 ├── hooks/commit-gate.sh    Deterministic commit gate (PreToolUse hook)
+├── hooks/hooks.json        Hook wiring for the plugin (${CLAUDE_PLUGIN_ROOT})
 ├── bin/install-personal.sh Idempotent installer (downloads from this repo to ~/.claude/)
 ├── bin/install-hooks.sh    Installs the commit gate into ~/.claude/settings.json
 ├── bin/validate-commands.sh Sanity check (frontmatter is well-formed)
@@ -23,6 +26,10 @@ claude-workspace/
 ├── README.md               Brief intro for visitors, install instructions
 └── CLAUDE.md               This file — rules for working ON the toolkit
 ```
+
+Skills, agents and hooks/hooks.json are AUTO-DISCOVERED by the plugin system —
+adding a new skill folder requires no plugin.json change. Bump `version` in
+.claude-plugin/plugin.json on every release that changes behavior.
 
 ## When modifying a skill
 

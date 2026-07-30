@@ -1,0 +1,14 @@
+{
+  "name": "mauroepce",
+  "owner": {
+    "name": "Mauricio Patino",
+    "url": "https://github.com/mauroepce"
+  },
+  "plugins": [
+    {
+      "name": "claude-workspace",
+      "source": "./",
+      "description": "Senior workflow toolkit: 16 skills, code-reviewer subagent, deterministic commit gate. Skills install namespaced (/claude-workspace:work); templates ship separately via the curl installer."
+    }
+  ]
+}
