@@ -1,6 +1,6 @@
 # The Framework
 
-> A short, opinionated methodology for working with AI agents on production code. Not theoretical — the fifteen `personal-commands/` in this repo encode it.
+> A short, opinionated methodology for working with AI agents on production code. Not theoretical — the sixteen `skills/` in this repo encode it.
 
 ## The thesis
 
@@ -14,7 +14,14 @@ The work has shifted. Writing code is no longer the senior skill — **directing
 
 This isn't novel philosophy. It's the practical operating model of senior engineers who have shipped real production code with agents in 2025–2026. The commands in this repo make it executable.
 
-## The fifteen commands
+## The sixteen skills
+
+Each skill is a folder `skills/<name>/SKILL.md` installed to `~/.claude/skills/`. Two invocation paths:
+
+- **Manual** — type `/<name>`, exactly like the slash commands they evolved from. Nothing changes in daily muscle memory.
+- **Automatic** — Claude reads every skill's `description` at session start (one line each; the body loads only on invocation) and activates the matching skill when the task calls for it. Landing in an unknown repo and asking for code triggers `/conventions` without you remembering it exists.
+
+The descriptions are therefore contracts: they state *what the skill does and when to use it*. Write them carefully — they are what makes the methodology self-applying.
 
 ### Task framework
 
@@ -300,27 +307,27 @@ Read every line. Verify behavior with at least one test. Don't merge what you do
 
 The third time you find yourself typing roughly the same context-setting prompt, it becomes a slash command. The third time you find yourself catching the same kind of bug, it becomes a check in your review checklist. Methodology compounds when you treat it as code.
 
-## Where the commands live
+## Where the skills live
 
-**User-level (`~/.claude/commands/`).** Installed once with `bin/install-personal.sh`. Available in every project you open. Doesn't require team consent — these are YOUR commands.
+**User-level (`~/.claude/skills/<name>/SKILL.md`).** Installed once with `bin/install-personal.sh`. Available in every project you open. Doesn't require team consent — these are YOUR skills.
 
 When you join a team or are handed a repo:
 
 ```bash
 git clone <team-repo>
 cd <team-repo>
-# Your personal commands already work — no team setup required
-# If the team has their own CLAUDE.md and commands, they layer on top
+# Your personal skills already work — no team setup required
+# If the team has their own CLAUDE.md and skills, they layer on top
 ```
 
 If the team independently defines `/work` or `/safe-commit`, the project-level version wins. Conflict-free.
 
 ## How to extend this
 
-The `personal-commands/` directory in this repo is the source of truth. To add a new personal command:
+The `skills/` directory in this repo is the source of truth. To add a new personal skill:
 
-1. Write `personal-commands/<name>.md` following the format of the existing ones.
-2. Add `<name>` to the `PERSONAL_COMMANDS` array in `bin/install-personal.sh`.
+1. Write `skills/<name>/SKILL.md` following the format of the existing ones. The `description` frontmatter doubles as the auto-invocation trigger. Supporting files can live next to SKILL.md; Claude loads them only when needed (progressive disclosure).
+2. Add `<name>` to the `PERSONAL_SKILLS` array in `bin/install-personal.sh`.
 3. Add a description to the echo block + uninstall line in the same script.
 4. Run `bin/validate-commands.sh` to verify the frontmatter is well-formed.
 5. Add a section to this doc.

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Install Mauricio's personal slash commands + templates into ~/.claude/
+# Install Mauricio's personal skills + templates into ~/.claude/
 # These are USER-LEVEL — available in any project, regardless of team config.
 #
 # Usage:
@@ -7,7 +7,9 @@
 #
 # What gets installed:
 #
-# Slash commands (~/.claude/commands/):
+# Skills (~/.claude/skills/<name>/SKILL.md). Each one is invokable manually as
+# /<name> (same as the old slash commands) AND auto-invocable: Claude reads the
+# description and activates the skill when the task matches, without being asked.
 #   /work         — spec → generate → review → iterate framework
 #   /quick-work   — lite /work for small tasks (single-file edits, fixes)
 #   /todo         — persistent task tracking with milestones
@@ -31,7 +33,8 @@
 #   tests/        vitest-setup
 #
 # Existing files with the same names are backed up to *.bak before being replaced.
-# Stale renamed files (architecture-map.md, journeys-diagram.md) are removed automatically.
+# Legacy slash-command files (~/.claude/commands/<name>.md) from pre-skills
+# versions are removed automatically — the skill replaces them 1:1.
 
 set -euo pipefail
 
@@ -39,7 +42,7 @@ REPO="mauroepce/claude-workspace"
 BRANCH="main"
 RAW="https://raw.githubusercontent.com/${REPO}/${BRANCH}"
 
-PERSONAL_COMMANDS=(
+PERSONAL_SKILLS=(
   "work"
   "quick-work"
   "todo"
@@ -78,14 +81,15 @@ TEMPLATES=(
 )
 
 COMMANDS_DIR="$HOME/.claude/commands"
+SKILLS_DIR="$HOME/.claude/skills"
 TEMPLATES_DIR="$HOME/.claude/templates"
 
 echo ""
-echo "→ Installing slash commands to: $COMMANDS_DIR"
-echo "→ Installing templates to:      $TEMPLATES_DIR"
+echo "→ Installing skills to:    $SKILLS_DIR"
+echo "→ Installing templates to: $TEMPLATES_DIR"
 echo ""
 
-mkdir -p "$COMMANDS_DIR" "$TEMPLATES_DIR"
+mkdir -p "$SKILLS_DIR" "$TEMPLATES_DIR"
 
 count_installed=0
 count_backed_up=0
@@ -114,8 +118,8 @@ install_file() {
   fi
 }
 
-# Remove stale (renamed) commands
-echo "Cleaning up renamed commands:"
+# Remove stale (renamed) commands + legacy slash-command files replaced by skills
+echo "Cleaning up legacy command files:"
 for stale in "${STALE_COMMANDS[@]}"; do
   stale_path="${COMMANDS_DIR}/${stale}.md"
   if [ -f "$stale_path" ]; then
@@ -124,11 +128,19 @@ for stale in "${STALE_COMMANDS[@]}"; do
     count_removed=$((count_removed + 1))
   fi
 done
+for skill in "${PERSONAL_SKILLS[@]}"; do
+  legacy_path="${COMMANDS_DIR}/${skill}.md"
+  if [ -f "$legacy_path" ]; then
+    rm "$legacy_path"
+    echo "  ✗ /${skill} (legacy command file — replaced by the skill)"
+    count_removed=$((count_removed + 1))
+  fi
+done
 
 echo ""
-echo "Slash commands:"
-for cmd in "${PERSONAL_COMMANDS[@]}"; do
-  install_file "${RAW}/personal-commands/${cmd}.md" "${COMMANDS_DIR}/${cmd}.md" "/${cmd}"
+echo "Skills:"
+for skill in "${PERSONAL_SKILLS[@]}"; do
+  install_file "${RAW}/skills/${skill}/SKILL.md" "${SKILLS_DIR}/${skill}/SKILL.md" "/${skill}"
 done
 
 echo ""
@@ -146,7 +158,9 @@ else
 fi
 
 echo ""
-echo "Available now in ANY Claude Code session, any project:"
+echo "Available now in ANY Claude Code session, any project."
+echo "Each skill works two ways: invoke it manually (/name), or let Claude"
+echo "auto-activate it when your request matches its description."
 echo ""
 echo "  /work         — spec-first task framework"
 echo "  /quick-work   — lite /work for small tasks"
@@ -215,5 +229,5 @@ echo ""
 echo "Verify at any time: bash <(curl -fsSL ${RAW}/bin/verify-claude-config.sh)"
 echo ""
 echo "To update: re-run this script."
-echo "To uninstall: rm -rf ~/.claude/commands/{work,quick-work,todo,issue,debug,conventions,architecture,journeys,decision,code-review,safe-commit,safe-push,scaffold,onboard,isolate,commands}.md ~/.claude/templates/"
+echo "To uninstall: rm -rf ~/.claude/skills/{work,quick-work,todo,issue,debug,conventions,architecture,journeys,decision,code-review,safe-commit,safe-push,scaffold,onboard,isolate,commands} ~/.claude/templates/"
 echo ""
