@@ -178,23 +178,31 @@ fi
 
 echo ""
 
-# ─── Check 5: Framework commands are installed ───────────────────────────────
-echo "${BOLD}[5/6] Framework commands${RESET}"
+# ─── Check 5: Framework skills are installed ─────────────────────────────────
+echo "${BOLD}[5/6] Framework skills${RESET}"
 
-if [ -d "${HOME}/.claude/commands" ]; then
-  cmd_count=$(find "${HOME}/.claude/commands" -maxdepth 1 -name "*.md" 2>/dev/null | wc -l | tr -d ' ')
-  if [ "$cmd_count" -ge 15 ]; then
-    pass "$cmd_count personal commands installed at ~/.claude/commands/"
-  elif [ "$cmd_count" -gt 0 ]; then
-    warn "$cmd_count personal commands installed (expected 16+)"
-    info "Some commands may be missing. Re-run bin/install-personal.sh."
+if [ -d "${HOME}/.claude/skills" ]; then
+  skill_count=$(find "${HOME}/.claude/skills" -mindepth 2 -maxdepth 2 -name "SKILL.md" 2>/dev/null | wc -l | tr -d ' ')
+  if [ "$skill_count" -ge 15 ]; then
+    pass "$skill_count personal skills installed at ~/.claude/skills/"
+  elif [ "$skill_count" -gt 0 ]; then
+    warn "$skill_count personal skills installed (expected 16+)"
+    info "Some skills may be missing. Re-run bin/install-personal.sh."
   else
-    fail "No personal commands found at ~/.claude/commands/"
+    fail "No personal skills found at ~/.claude/skills/"
     info "Run: curl -fsSL https://raw.githubusercontent.com/mauroepce/claude-workspace/main/bin/install-personal.sh | bash"
   fi
 else
-  fail "~/.claude/commands/ directory does not exist"
+  fail "~/.claude/skills/ directory does not exist"
   info "Run: curl -fsSL https://raw.githubusercontent.com/mauroepce/claude-workspace/main/bin/install-personal.sh | bash"
+fi
+# Legacy check: old slash-command files left behind confuse same-name resolution
+if [ -d "${HOME}/.claude/commands" ]; then
+  legacy_count=$(find "${HOME}/.claude/commands" -maxdepth 1 -name "*.md" 2>/dev/null | wc -l | tr -d ' ')
+  if [ "$legacy_count" -gt 0 ]; then
+    warn "$legacy_count legacy command files remain at ~/.claude/commands/ (pre-skills format)"
+    info "Re-run bin/install-personal.sh to clean them up."
+  fi
 fi
 
 echo ""

@@ -2,7 +2,9 @@
 
 > Mauricio's personal toolkit for working with Claude Code at senior level.
 
-12 slash commands + a curated templates library, installable into your `~/.claude/` with one curl command. Layer on top of any project — new or existing, personal or team-owned — without touching the project's repo.
+16 skills + a curated templates library, installable into your `~/.claude/` with one curl command. Layer on top of any project — new or existing, personal or team-owned — without touching the project's repo.
+
+Each skill works two ways: invoke it manually (`/work`, `/conventions`, ...) exactly like the slash commands they evolved from, or let Claude **auto-activate** it — Claude reads each skill's description and applies the matching one when your request calls for it, without being asked. The methodology applies itself even when you forget to invoke it.
 
 ## What it is
 
@@ -21,10 +23,10 @@ curl -fsSL https://raw.githubusercontent.com/mauroepce/claude-workspace/main/bin
 ```
 
 This installs:
-- 12 slash commands to `~/.claude/commands/`
+- 16 skills to `~/.claude/skills/<name>/SKILL.md`
 - 9 code templates to `~/.claude/templates/`
 
-Idempotent — re-run anytime to update. Backs up your modified files to `*.bak` before replacing.
+Idempotent — re-run anytime to update. Backs up your modified files to `*.bak` before replacing. Legacy slash-command files from pre-skills versions (`~/.claude/commands/<name>.md`) are cleaned up automatically.
 
 ## Quick reference
 
@@ -50,9 +52,9 @@ Full methodology and command details in [`docs/FRAMEWORK.md`](./docs/FRAMEWORK.m
 
 ## How layering works
 
-Personal commands live in `~/.claude/commands/`. They're available in **any project you open with Claude Code** — your own repos, client repos, team repos where you don't control configuration.
+Personal skills live in `~/.claude/skills/`. They're available in **any project you open with Claude Code** — your own repos, client repos, team repos where you don't control configuration.
 
-If a project has its own `.claude/commands/` with a same-named command, **the project version wins**. Your personal commands fill the gaps without overriding team conventions.
+If a project has its own `.claude/skills/` (or `.claude/commands/`) with a same-named entry, **the project version wins**. Your personal skills fill the gaps without overriding team conventions.
 
 This means:
 - Use my framework freely in new projects
@@ -85,7 +87,7 @@ Your modified files get backed up to `*.bak`. New/changed files get installed.
 ## Uninstall
 
 ```bash
-rm -rf ~/.claude/commands/{work,quick-work,todo,issue,debug,conventions,architecture,journeys,decision,code-review,safe-commit,safe-push,scaffold,onboard,commands}.md
+rm -rf ~/.claude/skills/{work,quick-work,todo,issue,debug,conventions,architecture,journeys,decision,code-review,safe-commit,safe-push,scaffold,onboard,isolate,commands}
 rm -rf ~/.claude/templates/
 ```
 

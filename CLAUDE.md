@@ -4,7 +4,7 @@ Rules for Claude when working IN this repository (the toolkit itself, not when u
 
 ## What this repo is
 
-This repository is **Mauricio's personal claude-code toolkit** — slash commands installed to `~/.claude/commands/` and code templates installed to `~/.claude/templates/`. NOT a workspace template for new projects, NOT a project scaffolder, NOT a general framework. **Personal toolkit only.**
+This repository is **Mauricio's personal claude-code toolkit** — skills installed to `~/.claude/skills/` (each invokable manually as `/<name>` and auto-invocable by Claude via its description) and code templates installed to `~/.claude/templates/`. NOT a workspace template for new projects, NOT a project scaffolder, NOT a general framework. **Personal toolkit only.**
 
 The audience is Mauricio and anyone who finds the methodology useful enough to install it.
 
@@ -12,32 +12,32 @@ The audience is Mauricio and anyone who finds the methodology useful enough to i
 
 ```
 claude-workspace/
-├── personal-commands/      Source of truth for the slash commands
+├── skills/<name>/SKILL.md  Source of truth for the skills (one folder per skill)
 ├── templates/              Source of truth for the code templates
 ├── bin/install-personal.sh Idempotent installer (downloads from this repo to ~/.claude/)
 ├── bin/validate-commands.sh Sanity check (frontmatter is well-formed)
-├── docs/FRAMEWORK.md       Canonical doc — methodology + every command explained
+├── docs/FRAMEWORK.md       Canonical doc — methodology + every skill explained
 ├── README.md               Brief intro for visitors, install instructions
 └── CLAUDE.md               This file — rules for working ON the toolkit
 ```
 
-## When modifying a command
+## When modifying a skill
 
-1. Edit `personal-commands/<name>.md` directly. This is the source of truth.
+1. Edit `skills/<name>/SKILL.md` directly. This is the source of truth.
 2. Run `bin/validate-commands.sh` to verify frontmatter is well-formed.
-3. Update `docs/FRAMEWORK.md` if the command's behavior or composition changed.
+3. Update `docs/FRAMEWORK.md` if the skill's behavior or composition changed.
 4. Update `README.md`'s quick reference table if the description changed.
-5. Update `bin/install-personal.sh` if you added/removed a command.
+5. Update `bin/install-personal.sh` if you added/removed a skill.
 6. Commit with a `feat:` or `fix:` prefix and a clear description.
 7. Push. The installer pulls from `main` directly, so changes are live immediately.
 
-## When adding a new command
+## When adding a new skill
 
 1. Decide the name. Single-word preferred. Multi-word OK if the name carries meaning (e.g., `safe-commit` — the `safe-` prefix is intentional).
-2. Write `personal-commands/<name>.md` following the format of the existing commands (frontmatter with `description:`, then markdown body with Phases).
-3. Add the command name to `PERSONAL_COMMANDS=()` array in `bin/install-personal.sh`.
+2. Write `skills/<name>/SKILL.md` following the format of the existing skills (frontmatter with `description:`, then markdown body with Phases). The `description` doubles as the auto-invocation trigger — write it as "what it does + when Claude should use it". Supporting files (reference docs, snippets) can live next to SKILL.md in the same folder; Claude loads them only when needed.
+3. Add the skill name to `PERSONAL_SKILLS=()` array in `bin/install-personal.sh`.
 4. Add the description to the `echo` block at the end of the installer.
-5. Update the uninstall command in `bin/install-personal.sh` to include the new file.
+5. Update the uninstall command in `bin/install-personal.sh` to include the new folder.
 6. Add a row to `docs/FRAMEWORK.md`.
 7. Add a row to the quick reference table in `README.md`.
 
