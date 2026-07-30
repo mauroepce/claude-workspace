@@ -119,6 +119,22 @@ End with:
 
 Wait for the user to decide. Don't auto-apply changes.
 
+## Phase 6 — Write the review receipt (feeds the commit gate)
+
+When the outcome is "proceed" — zero must-fix remaining, either because none were found or because the user addressed or explicitly waived them — write the receipt that the deterministic commit gate (`hooks/commit-gate.sh`) verifies before allowing `git commit`:
+
+```bash
+mkdir -p .claude
+{ git diff --cached | git hash-object --stdin; date -u +%Y-%m-%dT%H:%M:%SZ; } > .claude/review-passed
+```
+
+Rules:
+
+- Write it AFTER any fixes are staged. The receipt hashes the exact staged diff — if anything else gets staged afterward, the gate will (correctly) demand a fresh review.
+- The receipt must NOT be committed. Check that `.gitignore` covers `.claude/review-passed` and offer to add the line if it doesn't.
+- If the review scope was explicit files rather than the staged diff, skip the receipt — the gate only makes sense for staged-changes reviews.
+- On machines without the gate installed (`bin/install-hooks.sh`), the receipt is inert — writing it is always safe.
+
 ## What NOT to do
 
 - Don't soften findings to be polite. "This could be improved" hides a real problem.
