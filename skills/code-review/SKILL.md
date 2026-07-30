@@ -8,6 +8,14 @@ You are Claude. The user wants a structured code-quality review. Your job is to 
 
 **Argument (optional):** `$ARGUMENTS` may be a file pattern or "all staged" (default). If empty, default to all staged changes.
 
+## Phase 0 — Delegate if the reviewer subagent is available
+
+If the `code-reviewer` subagent is installed (`~/.claude/agents/code-reviewer.md` or a project-level equivalent), delegate Phases 1–4 to it instead of reviewing inline. It reviews with a clean context (no memory of how the code was implemented, so no author bias) and no write tools (it physically cannot "fix while reviewing").
+
+Pass it the scope from `$ARGUMENTS`, then present its findings verbatim and continue with Phase 5 (hand off) and Phase 6 (receipt) in this session.
+
+If the subagent is not installed, review inline with the phases below — same checklist, same output.
+
 ## Phase 1 — Determine scope
 
 If `$ARGUMENTS` is empty or "staged":

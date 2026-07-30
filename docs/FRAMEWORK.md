@@ -309,6 +309,18 @@ The trust-boundary section above defends the framework's gates against *platform
 
 Install: `bash <(curl -fsSL https://raw.githubusercontent.com/mauroepce/claude-workspace/main/bin/install-hooks.sh)` — idempotent, backs up `settings.json` before merging the entry.
 
+## Separation of powers: the reviewer subagent
+
+The framework's principle 2 says "treat agent output like a junior's PR" — but until now the reviewer was the same Claude that wrote the code, reviewing itself with a prompt. It knows its own justifications and tends to validate them, exactly like a dev reviewing their own PR.
+
+`agents/code-reviewer.md` (installed to `~/.claude/agents/`) makes the separation structural instead of rhetorical:
+
+- **Clean context** — a subagent starts with an empty context window. It has no memory of how the code was implemented or why, so it reviews the diff the way an outside reviewer would.
+- **No write tools** — its frontmatter grants `Read, Grep, Glob, Bash` only. It physically cannot "fix while reviewing"; author and reviewer stay different roles by construction, not by convention.
+- **Composed, not parallel** — `/code-review` Phase 0 delegates to the subagent when installed and falls back to inline review when not. The receipt (Phase 6) is still written by the main session after findings are resolved. Note: subagents don't run in parallel within a session — the win here is isolation, not speed.
+
+The pipeline after this piece: implement (main session, `/work`) → review (subagent, clean context, read-only) → gate (hook, deterministic) → commit. Each role with exactly the powers it needs.
+
 ## The mental model
 
 Three principles that survive any change in tooling:
