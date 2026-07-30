@@ -78,6 +78,7 @@ TEMPLATES=(
   "utils/result-type.ts"
   "utils/zod-helpers.ts"
   "tests/vitest-setup.ts"
+  "ci/claude-review.yml"
 )
 
 # Subagents: separate Claude instances with their own context and restricted

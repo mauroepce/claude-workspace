@@ -1,0 +1,58 @@
+# claude-review.yml — the framework's code review running in CI on every PR.
+#
+# This is the CI arm of /code-review: the same senior checklist, but nobody
+# has to remember to run it. The local skill (+ the commit gate hook) is the
+# first line of defense; this is the net that catches whatever slips through —
+# a rushed merge, a collaborator without the toolkit, a commit from a phone.
+#
+# Setup (per repo):
+#   1. Copy this file to .github/workflows/claude-review.yml
+#   2. Add ANTHROPIC_API_KEY to the repo's Actions secrets
+#      (Settings → Secrets and variables → Actions → New repository secret)
+#   3. Open a PR — findings arrive as a PR comment
+#
+# Alternative mode: remove the `prompt` input and Claude responds only when
+# someone mentions @claude in a PR/issue comment instead of on every push.
+#
+# Cost note: one review per push to an open PR. For high-traffic repos,
+# consider `types: [opened, ready_for_review]` to review once per PR.
+
+name: Claude Review
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history so the action can diff against the base branch
+
+      - uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            Review this pull request's diff with a skeptical senior reviewer's eye.
+            You did not write this code; do not validate it — find real problems.
+
+            Checklist:
+            - Naming and clarity: names describe intent; a teammate would understand the why in 3 months
+            - Structure: functions do one thing; no conditionals nested deeper than 3; no hidden coupling
+            - Pattern adherence: matches the codebase's existing patterns (read surrounding files if unsure)
+            - Tests: exercise behavior, not just call functions; edge cases covered; would fail if behavior broke
+            - Error handling: failures handled or propagated, never swallowed; timeouts on external calls
+            - Performance: O(n^2) on large n, sync calls in loops, unbatched queries
+            - Hygiene: inputs not trusted blindly, no sensitive data in logs, dates/timezones correct
+            - Separation of concerns: no HTTP/DB calls inside UI components; one-way flow component -> service -> repository
+
+            Post ONE PR comment with the findings in this tiered format:
+            MUST-FIX (would reject) / SHOULD-FIX (request changes) / NICE-TO-HAVE / STRENGTHS.
+            Each finding: file:line, one-sentence issue, why it matters, minimal suggestion.
+            If the diff is clean, say so explicitly — do not fabricate findings.
