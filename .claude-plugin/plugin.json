@@ -1,0 +1,14 @@
+{
+  "name": "claude-workspace",
+  "displayName": "Claude Workspace",
+  "version": "2.0.0",
+  "description": "Mauricio's senior workflow for Claude Code: 16 skills (spec-first /work, review gates, codebase onboarding), a no-write-tools code-reviewer subagent, and a deterministic commit gate hook.",
+  "author": {
+    "name": "Mauricio Patino",
+    "url": "https://github.com/mauroepce"
+  },
+  "homepage": "https://github.com/mauroepce/claude-workspace",
+  "repository": "https://github.com/mauroepce/claude-workspace",
+  "license": "MIT",
+  "keywords": ["workflow", "code-review", "spec-first", "commit-gate", "onboarding"]
+}
