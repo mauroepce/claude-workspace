@@ -321,6 +321,23 @@ The framework's principle 2 says "treat agent output like a junior's PR" — but
 
 The pipeline after this piece: implement (main session, `/work`) → review (subagent, clean context, read-only) → gate (hook, deterministic) → commit. Each role with exactly the powers it needs.
 
+## The framework in CI
+
+Everything above runs on your machine, which means it only exists while you are at the keyboard. A rushed merge from the GitHub UI, a collaborator without the toolkit, a commit from a phone — none of it passes through `/code-review` or the commit gate.
+
+`templates/ci/claude-review.yml` closes that hole: a GitHub Actions workflow (using the official `anthropics/claude-code-action@v1`) that runs the `/code-review` checklist on every pull request and posts tiered findings (must-fix / should-fix / nice-to-have / strengths) as a PR comment.
+
+Setup per repo: copy the template to `.github/workflows/claude-review.yml`, add `ANTHROPIC_API_KEY` to the repo's Actions secrets, open a PR. Same pattern as any cron/CI you already run — the methodology becomes infrastructure instead of discipline.
+
+The layering, complete:
+
+| Layer | Where it runs | What it guarantees |
+|---|---|---|
+| Skills | your session | methodology auto-applies while you work |
+| Reviewer subagent | your session | review without author bias or write access |
+| Commit gate (hook) | your machine, every session | no unreviewed diff enters history locally |
+| CI review | GitHub, every PR | no unreviewed diff merges, even without you |
+
 ## The mental model
 
 Three principles that survive any change in tooling:

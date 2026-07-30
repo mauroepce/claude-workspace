@@ -35,6 +35,12 @@ Templates are installed to `~/.claude/templates/` by `bin/install-personal.sh`. 
 |---|---|---|
 | `tests/vitest-setup.ts` | Vitest config + example test + fixture pattern | Starting tests in a new project |
 
+### CI
+
+| Template | What it is | Use when |
+|---|---|---|
+| `ci/claude-review.yml` | GitHub Actions workflow: Claude reviews every PR with the framework's /code-review checklist and comments findings | Any repo where review shouldn't depend on you being at the keyboard. Copy to `.github/workflows/`, add `ANTHROPIC_API_KEY` secret |
+
 ## Conventions baked in
 
 All templates follow:
