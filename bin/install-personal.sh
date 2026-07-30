@@ -80,16 +80,24 @@ TEMPLATES=(
   "tests/vitest-setup.ts"
 )
 
+# Subagents: separate Claude instances with their own context and restricted
+# tools. code-reviewer has NO write tools — structural separation of powers.
+AGENTS=(
+  "code-reviewer"
+)
+
 COMMANDS_DIR="$HOME/.claude/commands"
 SKILLS_DIR="$HOME/.claude/skills"
 TEMPLATES_DIR="$HOME/.claude/templates"
+AGENTS_DIR="$HOME/.claude/agents"
 
 echo ""
 echo "→ Installing skills to:    $SKILLS_DIR"
 echo "→ Installing templates to: $TEMPLATES_DIR"
+echo "→ Installing agents to:    $AGENTS_DIR"
 echo ""
 
-mkdir -p "$SKILLS_DIR" "$TEMPLATES_DIR"
+mkdir -p "$SKILLS_DIR" "$TEMPLATES_DIR" "$AGENTS_DIR"
 
 count_installed=0
 count_backed_up=0
@@ -150,6 +158,12 @@ for tpl in "${TEMPLATES[@]}"; do
 done
 
 echo ""
+echo "Agents:"
+for agent in "${AGENTS[@]}"; do
+  install_file "${RAW}/agents/${agent}.md" "${AGENTS_DIR}/${agent}.md" "agent:${agent}"
+done
+
+echo ""
 if [ $count_failed -eq 0 ]; then
   echo "✅ ${count_installed} files installed, ${count_backed_up} backed up, ${count_removed} stale removed"
 else
@@ -180,6 +194,10 @@ echo "  /isolate      — clean workspace for tests/interviews (prevents context
 echo "  /commands     — list installed personal commands"
 echo ""
 echo "Templates browseable: ls ~/.claude/templates/"
+echo ""
+echo "Subagents installed (~/.claude/agents/):"
+echo "  code-reviewer — clean-context reviewer with NO write tools;"
+echo "  /code-review delegates to it when available"
 echo ""
 
 # ─── Offer to apply trust-boundary defenses ──────────────────────────────────
@@ -229,5 +247,5 @@ echo ""
 echo "Verify at any time: bash <(curl -fsSL ${RAW}/bin/verify-claude-config.sh)"
 echo ""
 echo "To update: re-run this script."
-echo "To uninstall: rm -rf ~/.claude/skills/{work,quick-work,todo,issue,debug,conventions,architecture,journeys,decision,code-review,safe-commit,safe-push,scaffold,onboard,isolate,commands} ~/.claude/templates/"
+echo "To uninstall: rm -rf ~/.claude/skills/{work,quick-work,todo,issue,debug,conventions,architecture,journeys,decision,code-review,safe-commit,safe-push,scaffold,onboard,isolate,commands} ~/.claude/templates/ ~/.claude/agents/code-reviewer.md"
 echo ""
