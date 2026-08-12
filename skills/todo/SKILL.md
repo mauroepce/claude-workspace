@@ -1,5 +1,5 @@
 ---
-description: Manage persistent todos/milestones for current work. Unlike Claude Code's built-in TodoWrite (which is session-only), these survive across sessions in .claude/todos.md. Create tasks with milestones, mark them done, see current focus. Use when a task is big enough to span multiple sessions, or when you need to remember "where was I?".
+description: Manage persistent todos/milestones for current work. Unlike Claude Code's built-in TodoWrite (which is session-only), these survive across sessions in .claude/todos.md. Create tasks with milestones, mark them done, see current focus. Use when a task is big enough to span multiple sessions, or when you need to remember "where was I?". Also activate on in-prose markers — "TODO:", "blocker:", "done:", "checkpoint" — which map to explicit todo-file operations.
 ---
 
 # /todo — Persistent task tracking with milestones
@@ -7,6 +7,8 @@ description: Manage persistent todos/milestones for current work. Unlike Claude 
 You are Claude. The user wants to manage tasks (with multiple milestones each) that survive across Claude Code sessions.
 
 This complements — does NOT replace — the built-in `TodoWrite` tool. Use TodoWrite for in-session tracking (the in-the-moment task list you maintain while working). Use `/todo` to PERSIST those todos to a file so they survive when the session ends.
+
+If the optional session-status hook is installed (`bin/install-hooks.sh`), the focused task and its next milestone are pushed into context automatically at session start — `/todo list` remains the on-demand view.
 
 **Argument (optional):** `$ARGUMENTS` may be an action keyword. If empty, show the menu.
 
@@ -24,6 +26,8 @@ test -f TODOS.md && echo "found TODOS.md"
 If none exists yet, the user is creating their first task. Skip to "Action: new" below.
 
 If one exists, read it fully so you have context on all active tasks before doing anything.
+
+**Workspace roots:** if the current directory is not a git repo but 2+ direct children are git repos (a parent folder holding multiple projects), the todos file lives HERE — at the workspace root — so one file tracks work across all the repos. Tag each task with the repo it belongs to (see the format below). Everything else works the same.
 
 ## Phase 2 — Determine intent
 
@@ -98,6 +102,8 @@ Default Y. If Y, mark this task as `[FOCUSED]` and unmark any other previously f
 ### Save the new task
 
 Append to `.claude/todos.md` (default), or write the file if it doesn't exist. Format:
+
+In a workspace root, extend the metadata line with the repo tag: `*Started: <date> | Estimated effort: <effort> | Repo: <child-repo-dir>*`
 
 \`\`\`markdown
 ## <task-slug> — <Task title> [FOCUSED]
@@ -213,6 +219,23 @@ If yes, append to the "Notes" section of that task with today's date.
 
 Notes are gold for the "where was I?" moment after a long break.
 
+## In-prose markers (push vocabulary)
+
+The user can drive the todos file without invoking `/todo` explicitly, by writing markers mid-conversation. These are EXPLICIT instructions — honor them when noticed, no extra confirmation needed:
+
+| Marker | Operation |
+|---|---|
+| `TODO: <text>` | Append as a new unchecked milestone on the focused task (or as a standalone task if none is focused) |
+| `blocker: <text>` | Append to the focused task's Notes with today's date, prefixed `Blocker:` |
+| `done: <text>` | Mark the milestone matching `<text>` as done. If no milestone matches unambiguously, ask which one |
+| `checkpoint` | Flush now: reconcile the current in-session TodoWrite state into the todos file |
+
+Two rules keep this safe:
+- A marker is a line the user WROTE, not a topic they mentioned. "we should handle the blocker eventually" is conversation; `blocker: pg18 won't boot with the compose volume` is an instruction.
+- `done:` requires an unambiguous match against an existing milestone. When in doubt, ask — never guess-complete.
+
+"No extra confirmation" means don't ask BEFORE applying; it doesn't suspend transparency. Apply the marker, then show the resulting change in one line (e.g., "todos.md: milestone 4 marked done"). This is the marker-flow exception to "don't write the file without showing the user what's being saved" below — the marker itself was the user showing you.
+
 ## Composition with `/work`
 
 When `/work` is invoked and produces a plan with 3+ steps in Phase 3, suggest at the end:
@@ -225,7 +248,7 @@ This is the bridge: `/work` for the structured spec, `/todo` for the persistent 
 
 ## What NOT to do
 
-- Don't auto-mark milestones as done just because the user mentions them in passing. Wait for explicit `/todo done`.
+- Don't auto-mark milestones as done just because the user mentions them in passing. Wait for explicit `/todo done <N>` or an explicit `done: <text>` marker.
 - Don't write the file without showing the user what's being saved.
 - Don't replace Claude Code's built-in TodoWrite. They serve different scopes (TodoWrite = in-session, `/todo` = cross-session).
 - Don't keep all archived tasks forever. Suggest cleanup periodically: *"Archive section has 50 tasks. Trim to last 10?"*

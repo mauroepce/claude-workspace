@@ -5,3 +5,6 @@ node_modules/
 .idea/
 .vscode/
 *.log
+
+# review receipt written by /code-review, verified by hooks/commit-gate.sh
+.claude/review-passed

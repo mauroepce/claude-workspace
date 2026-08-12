@@ -18,9 +18,10 @@ claude-workspace/
 ├── templates/              Source of truth for the code templates (NOT in the plugin)
 ├── agents/<name>.md        Subagents (code-reviewer: clean context, no write tools)
 ├── hooks/commit-gate.sh    Deterministic commit gate (PreToolUse hook)
+├── hooks/session-status.sh Pushes the focused /todo task into context (SessionStart hook)
 ├── hooks/hooks.json        Hook wiring for the plugin (${CLAUDE_PLUGIN_ROOT})
 ├── bin/install-personal.sh Idempotent installer (downloads from this repo to ~/.claude/)
-├── bin/install-hooks.sh    Installs the commit gate into ~/.claude/settings.json
+├── bin/install-hooks.sh    Installs both hooks into ~/.claude/settings.json
 ├── bin/validate-commands.sh Sanity check (frontmatter is well-formed)
 ├── docs/FRAMEWORK.md       Canonical doc — methodology + every skill explained
 ├── README.md               Brief intro for visitors, install instructions
