@@ -1,5 +1,5 @@
 ---
-description: Joining an unfamiliar codebase. Runs /conventions + /architecture + /journeys in sequence and produces an onboarding package — three persistent files plus a 5-minute "where to start reading" summary. Use on day one of a new project, a client handoff, or returning to your own code after long absence.
+description: Joining an unfamiliar codebase. Runs /conventions + /architecture + /journeys in sequence and produces an onboarding package — three persistent files plus a 5-minute "where to start reading" summary. Use on day one of a new project, a client handoff, or returning to your own code after long absence. Workspace folders with multiple repos get a root INDEX.md plus per-repo packages; team repos with committed .claude/ get *.local.md artifacts kept out of git status.
 ---
 
 # /onboard — Codebase onboarding package
@@ -9,6 +9,35 @@ You are Claude. The user just opened an unfamiliar codebase and wants the full c
 This is the meta-command that ties `/conventions`, `/architecture`, and `/journeys` together. Used by senior devs in their first 30 minutes in a new repo.
 
 **Argument (optional):** `$ARGUMENTS` may be a brief context note (e.g., "joining as full-stack hire, focus on backend"). Used to bias the prioritization in step 5.
+
+## Phase 0 — Detect the terrain
+
+Two checks BEFORE the sanity check, because they change where everything gets written:
+
+```bash
+# A. Workspace root? (not a repo itself, but 2+ direct children are git repos)
+# rev-parse instead of `test -d .git`: worktrees have a .git FILE, not a dir.
+git rev-parse --is-inside-work-tree >/dev/null 2>&1 && echo "is a repo" || ls -d */.git 2>/dev/null | wc -l
+
+# B. Team-owned tooling? (the repo commits .claude/ content or a CLAUDE.md)
+git ls-files .claude CLAUDE.md 2>/dev/null | head -5
+```
+
+**Case A — no `.git` here but 2+ child directories are git repos** → this is a workspace folder, not a codebase. Jump to "Workspace mode" below. Do NOT stop with "not a git repo".
+
+**Case B — tracked `.claude/` files or a CLAUDE.md exist** → this repo belongs to a team, and your onboarding artifacts are personal notes, not team deliverables. Announce it:
+
+> "This repo has team-owned Claude tooling (committed `.claude/` or CLAUDE.md). I'll write the onboarding package as `*.local.md` files and keep them out of `git status` so nothing personal shows up in the team's diff."
+
+Then for this entire run: use the `.local.md` variant of every output (`conventions.local.md`, `architecture-map.local.md`, `journeys-diagram.local.md`, `onboarding.local.md`) and offer to exclude them locally:
+
+```bash
+printf '# personal claude-workspace artifacts\n.claude/*.local.md\n' >> .git/info/exclude
+```
+
+Why `.git/info/exclude` and not `.gitignore`: `.gitignore` is a committed, shared file — editing it puts YOUR tooling in THEIR diff, which is exactly what this mode avoids. `.git/info/exclude` behaves identically but never leaves your machine.
+
+If neither case applies, continue to Phase 1 — the classic single-repo flow.
 
 ## Phase 1 — Sanity check
 
@@ -20,7 +49,35 @@ test -f package.json || test -f Cargo.toml || test -f pyproject.toml || test -f 
 find . -type f -name "*.ts" -o -name "*.tsx" -o -name "*.py" -o -name "*.go" -o -name "*.rs" 2>/dev/null | grep -v node_modules | head -1
 ```
 
-If it's not a real codebase, stop: *"I don't see a recognizable project structure here. Run `/onboard` inside a project root (where package.json / Cargo.toml / etc. lives)."*
+If it's not a real codebase (and Phase 0 didn't route to Workspace mode), stop: *"I don't see a recognizable project structure here. Run `/onboard` inside a project root (where package.json / Cargo.toml / etc. lives), or in a workspace folder containing your repos."*
+
+## Phase 1.5 — First-run preference: commit attribution
+
+Only on the FIRST onboard of a repo (no `.claude/onboarding.md` or `.local` variant exists yet). Skip entirely on re-runs. Runs AFTER the sanity check on purpose: never interrogate the user in a folder that Phase 1 is about to reject.
+
+First check whether the repo already legislates this (CLAUDE.md only — a `GIT ETIQUETTE` line in the conventions file is a recorded preference, not repo law, and must not short-circuit this check):
+
+```bash
+grep -i "co-authored-by" CLAUDE.md 2>/dev/null | head -3
+```
+
+If a rule exists, announce it — *"This repo's CLAUDE.md already states a commit-attribution rule; respecting it"* — and move on without asking. Otherwise ask, once:
+
+> "One repo preference, asked only on this first onboard: when I commit here, should commit messages include the `Co-Authored-By: Claude` trailer?
+> 1. **Yes** — transparent AI attribution in the git history (what this toolkit's own repo does)
+> 2. **No** — clean history, or the team hasn't decided a policy
+>
+> I'll record the answer in the conventions file so `/safe-commit` and future sessions honor it without re-asking."
+
+Carry the answer into Phase 2: when `/conventions` writes its report, append this section to that same file:
+
+```markdown
+## GIT ETIQUETTE
+
+- Co-Authored-By: Claude trailer in commits: <YES|NO> (set on first /onboard, <date>)
+```
+
+Precedence downstream: an explicit rule in the repo's own CLAUDE.md always wins over this recorded preference.
 
 ## Phase 2 — Run /conventions
 
@@ -42,7 +99,7 @@ For the journeys selection step, **suggest 3-5 most important ones** automatical
 
 ## Phase 5 — Produce the onboarding summary
 
-Create `.claude/onboarding.md` (or `.claude/onboarding.local.md` if `.gitignore` covers it) with this exact format:
+Create `.claude/onboarding.md` (or `.claude/onboarding.local.md` if `.gitignore` covers it, or always when Phase 0 flagged team-owned tooling) with this exact format:
 
 ```markdown
 # Onboarding — <project name>
@@ -106,14 +163,52 @@ Output:
 > - `architecture-map.md` (structure)
 > - `journeys-diagram.md` (flows)
 > - `onboarding.md` (the summary + suggested reading order)
+
+(Use the `*.local.md` names throughout when Phase 0 Case B applied.)
 >
 > Total ramp time: ~15 min to read all four. After that, you'll have a working mental model of the system.
 >
 > When you're ready to make changes, run `/work` — it'll auto-load the conventions file as context. Or `/quick-work` for small edits."
 
+## Workspace mode (parent folder with multiple repos)
+
+The folder is not a codebase — it's a workspace: each child directory with `.git` is its own project, with its own stack, conventions, and team. Onboarding it as ONE codebase would blend incompatible conventions into a muddled report, so don't. Produce two artifacts instead:
+
+### 1. INDEX.md — the roll-up (always; cheap)
+
+Light scan per child repo — `package.json`/`README` name and description, stack hints (lockfiles, frameworks, manifests), current branch, last commit date, clean/dirty state. No deep reading. Write `INDEX.md` at the workspace root:
+
+```markdown
+# <folder name> — workspace index
+
+*Generated by `/onboard` (workspace mode) on <date>. Re-run to refresh — the scan is cheap.*
+
+| Repo | What it is | Stack | Last activity | Onboarding |
+|---|---|---|---|---|
+| `<dir>/` | <one line from package.json/README> | <stack> | <date> on `<branch>` | [package](<dir>/.claude/onboarding.md) or — |
+
+## Cross-repo notes
+
+- <how the repos relate: who calls whom, shared contracts, deploy order — or "TBD: ask the team">
+```
+
+The workspace root usually isn't a git repo, so `INDEX.md` is invisible to every child repo's `git status` — nothing to exclude. If the root IS a repo, apply the Phase 0 Case B rules to it.
+
+### 2. Full onboarding — per repo, on demand
+
+Don't run three deep scans times N repos unprompted. Ask:
+
+> "Workspace indexed: <N> repos. Run the full onboarding (conventions + architecture + journeys) on one of them now? <list, most recently active first>. Each takes a few minutes — the others can be onboarded later by running `/onboard` inside them."
+
+For each chosen repo: `cd` into it and run Phases 0–6 normally. Phase 0 matters here — client repos inside a workspace usually hit Case B (team-owned tooling), so their packages land as `*.local.md` automatically.
+
+After per-repo runs complete, update the INDEX.md "Onboarding" column to link each generated package.
+
 ## Composition
 
 `/onboard` is the orchestrator. The three commands it runs (`/conventions`, `/architecture`, `/journeys`) are still atomic and invokable independently — you don't NEED to use `/onboard` to get them. But for the day-one experience, this single command is the right entry point.
+
+In workspace mode it also pairs with `/todo`: a workspace root is where a cross-repo `.claude/todos.md` lives (tasks tagged per repo), and the optional session-status hook surfaces the focused task from that same root at session start.
 
 ## What NOT to do
 

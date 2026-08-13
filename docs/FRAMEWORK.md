@@ -58,6 +58,13 @@ Composition: when `/work` Phase 3 produces a plan with 3+ steps, it suggests per
 
 Actions: `new`, `done <N>`, `list`, `focus <task>`, `archive`, `delete`. Notes can be appended at any time to capture decisions/blockers/learnings — gold for the "where was I?" moment after a long break.
 
+Two additions make it push instead of pull:
+
+- **In-prose markers** — `TODO: <text>`, `blocker: <text>`, `done: <text>`, `checkpoint` written mid-conversation are explicit todo-file operations; no need to invoke `/todo` formally. A marker is a line the user wrote, not a topic they mentioned.
+- **The session-status hook** (optional, `bin/install-hooks.sh`) reads the todos file at session start and pushes the focused task + next milestone into context. See § Deterministic status below.
+
+Workspace-aware: in a parent folder holding multiple repos (no root `.git`, 2+ child git repos), the todos file lives at the workspace root and tasks carry a `Repo:` tag.
+
 #### `/issue <number>` — GitHub issue intake
 
 Pulls an issue with `gh`, structures the context, surfaces what's NOT defined in the issue body, asks for additional context only you have, optionally creates a branch, and hands off to `/work`.
@@ -97,6 +104,13 @@ Orchestrates `/conventions` + `/architecture` + `/journeys` in sequence and prod
 Use on day one in a new repo (interview prep, new team, client handoff) or when returning to your own code after a long absence. Total ramp time after running: ~15 minutes of focused reading.
 
 This is the meta-command. The three sub-commands stay atomic and invokable independently, but for the day-one experience this single invocation is the right entry point.
+
+Two detection modes (Phase 0) handle the non-trivial terrains:
+
+- **Team repos** — if the repo commits `.claude/` content or a CLAUDE.md, the onboarding artifacts are personal notes in someone else's house: every output switches to its `*.local.md` variant and the skill offers `.git/info/exclude` (never `.gitignore`, which is a shared file) so nothing personal appears in the team's `git status`.
+- **Workspace folders** — a parent directory whose children are git repos (client workspaces, multi-repo products) gets a cheap root `INDEX.md` (repo | what it is | stack | last activity | onboarding link) plus full per-repo packages on demand, instead of one muddled cross-stack report.
+
+On the first onboard of a repo it also asks one setup question — should commits here carry the `Co-Authored-By: Claude` trailer? — and records the answer in the conventions file, where `/safe-commit` reads it. Asked once, skipped when the repo's CLAUDE.md already states a rule.
 
 #### `/isolate` — clean workspace for tests and interviews
 
@@ -157,6 +171,8 @@ Use standalone when:
 Two-phase review (quality via `/code-review` + security via `/security-review`), verifies the commit maps to your `/work` spec, generates a commit message that explains the **why**, commits only after explicit confirmation. Never bypasses git hooks.
 
 The win: catches the obvious failure modes (secret leaks, unintentional auth changes, suspicious diff patterns) before they enter history. Plus commit messages that have business value, not "update files".
+
+The `Co-Authored-By: Claude` trailer is resolved per repo: the repo's own CLAUDE.md rule wins; otherwise the conventions file's `GIT ETIQUETTE` preference (recorded by `/onboard`'s first-run question) applies; otherwise no trailer.
 
 #### `/safe-push` — review before push
 
@@ -307,7 +323,22 @@ The trust-boundary section above defends the framework's gates against *platform
 - *Fail-open* — no jq, not a git repo, nothing staged: the gate allows the action. It defends against forgetting review, not against an adversary with shell access.
 - *Human escape hatch* — `SKIP_REVIEW_GATE=1 git commit ...` bypasses the gate. It exists for humans in emergencies; `/safe-commit` explicitly forbids the model from using it.
 
-Install: `bash <(curl -fsSL https://raw.githubusercontent.com/mauroepce/claude-workspace/main/bin/install-hooks.sh)` — idempotent, backs up `settings.json` before merging the entry.
+Install: `bash <(curl -fsSL https://raw.githubusercontent.com/mauroepce/claude-workspace/main/bin/install-hooks.sh)` — idempotent, backs up `settings.json` before merging the entries (it registers both hooks).
+
+## Deterministic status: the session-start hook
+
+The commit gate applied "a hook is code the harness always runs" to reviews. This section applies the same principle to continuity. `/todo` persists tasks across sessions, but reading the file back was pull — it depended on the user remembering to run `/todo list` at the start of every session. A status system that depends on your memory to stay useful is the exact problem it was built to solve.
+
+**The hook:** `hooks/session-status.sh`, registered as a `SessionStart` hook by `bin/install-hooks.sh` (and pre-wired in `hooks/hooks.json` for plugin installs). When a session starts, the harness runs it; whatever it prints is added to Claude's context before the first user message. If the project has a todos file (`.claude/todos.md`, `.claude/todos.local.md`, or `TODOS.md` — same lookup order as the skill), it prints the `[FOCUSED]` task, its milestone progress, and the next unchecked milestone.
+
+**Properties:**
+
+- *Push, not pull* — the session opens already knowing where you were. "Where was I?" stops being a question you remember to ask.
+- *Fail-open and silent* — no todos file, no focused task, unreadable payload: it prints nothing and exits 0. It can never break or noise up a session start.
+- *Read-only* — the hook never writes. State changes stay in the `/todo` skill, in-session, where the user can see them.
+- *Workspace-aware for free* — it reads the todos file at the session's root, so a workspace-root todos file (multi-repo tracking) is surfaced exactly like a single-repo one.
+
+Together the two hooks bracket a session: session-status pushes context in at the start; the commit gate blocks unreviewed work at the end.
 
 ## Separation of powers: the reviewer subagent
 

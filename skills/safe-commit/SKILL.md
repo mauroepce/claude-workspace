@@ -89,6 +89,12 @@ Types: `feat`, `fix`, `refactor`, `chore`, `docs`, `test`, `perf`, `style`.
 
 The body should answer: **why was this change necessary?** Not "I changed X to Y" but "X was failing under condition Z because of constraint W; Y handles it correctly."
 
+**Trailer resolution (`Co-Authored-By: Claude`)** — decide before showing the message, in this order:
+
+1. The repo's own CLAUDE.md states a rule (opt-in or prohibition) — it wins.
+2. The conventions file (`.claude/conventions.md` or its `.local` variant) has a `GIT ETIQUETTE` section — recorded by `/onboard`'s first-run question — honor it.
+3. Neither exists — no trailer (the default).
+
 Show the user the message and ask: "Commit with this message?"
 
 If they revise, regenerate. If they approve, run:
@@ -114,7 +120,7 @@ Confirm the commit landed, working tree state is what the user expected. Don't p
 
 ## What NOT to do
 
-- Don't add `Co-Authored-By: Claude` unless the repo explicitly opts in via its own CLAUDE.md.
+- Don't add `Co-Authored-By: Claude` unless the repo opts in via its own CLAUDE.md or the conventions file's `GIT ETIQUETTE` section records a yes.
 - Don't bypass git hooks with `--no-verify` for any reason.
 - Don't commit if blockers exist.
 - Don't generate a generic message ("update files", "minor changes"). If you can't articulate the why, ask the user.

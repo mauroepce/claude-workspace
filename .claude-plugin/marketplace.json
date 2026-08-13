@@ -8,7 +8,7 @@
     {
       "name": "claude-workspace",
       "source": "./",
-      "description": "Senior workflow toolkit: 16 skills, code-reviewer subagent, deterministic commit gate. Skills install namespaced (/claude-workspace:work); templates ship separately via the curl installer."
+      "description": "Senior workflow toolkit: 16 skills (incl. multi-repo workspace onboarding), code-reviewer subagent, two deterministic hooks (commit gate, session-start status). Skills install namespaced (/claude-workspace:work); templates ship separately via the curl installer."
     }
   ]
 }

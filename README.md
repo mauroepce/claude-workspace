@@ -27,7 +27,7 @@ Inside any Claude Code session:
 /plugin install claude-workspace@mauroepce
 ```
 
-This repo is its own [plugin marketplace](./.claude-plugin/marketplace.json). The plugin ships the 16 skills, the `code-reviewer` subagent AND the commit-gate hook as one managed unit — versioned installs, one-command updates (`/plugin marketplace update mauroepce`), clean uninstall from `/plugin`.
+This repo is its own [plugin marketplace](./.claude-plugin/marketplace.json). The plugin ships the 16 skills, the `code-reviewer` subagent AND both deterministic hooks (commit gate, session status) as one managed unit — versioned installs, one-command updates (`/plugin marketplace update mauroepce`), clean uninstall from `/plugin`.
 
 Trade-offs vs the curl installer:
 - Plugin skills are namespaced: `/claude-workspace:work` instead of `/work` (auto-invocation by description works identically either way).
@@ -48,13 +48,16 @@ Pick ONE option — installing both gives you every skill twice (`/work` and `/c
 
 Idempotent — re-run anytime to update. Backs up your modified files to `*.bak` before replacing. Legacy slash-command files from pre-skills versions (`~/.claude/commands/<name>.md`) are cleaned up automatically.
 
-### Optional: the deterministic commit gate
+### Optional: the deterministic hooks
 
 ```bash
 bash <(curl -fsSL https://raw.githubusercontent.com/mauroepce/claude-workspace/main/bin/install-hooks.sh)
 ```
 
-Registers a `PreToolUse` hook that **physically blocks `git commit`** unless `/code-review` reviewed the exact staged diff (it writes a hash receipt to `.claude/review-passed`). The framework's "never commit unreviewed code" rule stops being a prompt the model follows and becomes code the harness enforces. Details in [`docs/FRAMEWORK.md`](./docs/FRAMEWORK.md#deterministic-gates-the-commit-hook). Requires `jq`.
+Registers two hooks (requires `jq`):
+
+- **Commit gate** (`PreToolUse`) — **physically blocks `git commit`** unless `/code-review` reviewed the exact staged diff (it writes a hash receipt to `.claude/review-passed`). The framework's "never commit unreviewed code" rule stops being a prompt the model follows and becomes code the harness enforces. Details in [`docs/FRAMEWORK.md`](./docs/FRAMEWORK.md#deterministic-gates-the-commit-hook).
+- **Session status** (`SessionStart`) — if the project has a `.claude/todos.md` (the `/todo` skill), the focused task and its next milestone are **pushed into context when the session opens**. "Where was I?" stops being a question you remember to ask; same principle as the gate, applied to continuity instead of review.
 
 ## Quick reference
 
@@ -62,7 +65,7 @@ Registers a `PreToolUse` hook that **physically blocks `git commit`** unless `/c
 |---|---|
 | `/work` | Spec-first task framework: spec → context → plan → implement → review |
 | `/quick-work` | Lite version of `/work` for small tasks (single-file edits, fixes) |
-| `/todo` | Persistent task tracking with milestones, survives across sessions |
+| `/todo` | Persistent task tracking with milestones, survives across sessions; in-prose markers (`TODO:`/`blocker:`/`done:`); workspace-aware |
 | `/issue <N>` | Pull a GitHub issue, structure its context, hand off to `/work` |
 | `/debug` | Hypothesis-driven debugging: root cause over symptom |
 | `/conventions` | Scan codebase for style patterns, persist to `.claude/conventions.md` |
@@ -73,7 +76,7 @@ Registers a `PreToolUse` hook that **physically blocks `git commit`** unless `/c
 | `/safe-commit` | `/code-review` + `/security-review` + commit with confirmation |
 | `/safe-push` | Full-branch review + push (refuses main without OK) |
 | `/scaffold` | Pick from curated code templates, insert adapted to context |
-| `/onboard` | Joining a new codebase: runs `/conventions` + `/architecture` + `/journeys` |
+| `/onboard` | Joining a new codebase: runs `/conventions` + `/architecture` + `/journeys`; multi-repo workspaces get a root `INDEX.md`; team repos get `*.local.md` artifacts |
 | `/commands` | List all installed personal commands with their descriptions |
 
 Full methodology and command details in [`docs/FRAMEWORK.md`](./docs/FRAMEWORK.md).
