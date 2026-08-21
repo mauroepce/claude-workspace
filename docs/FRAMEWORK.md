@@ -343,7 +343,7 @@ Together the two hooks bracket a session: session-status pushes context in at th
 
 ### Lifecycle prompt hooks (plugin install)
 
-`hooks/hooks.json` also registers two lightweight prompt hooks (these ship with the plugin install; the commit gate above is the only hook the curl installer wires):
+`hooks/hooks.json` also registers two lightweight prompt hooks (these ship with the plugin install; `bin/install-hooks.sh` wires only the two command hooks above):
 
 - **PostToolUse on `Write|Edit`** — after every file write, the model is prompted to verify its own edit: syntax errors, missing imports, broken references. Issues get fixed immediately instead of surfacing at review time. A cheap always-on quality net between generation and review.
 - **Stop** — before the session ends, the model checks for uncommitted changes, an `in-progress` spec in `.claude/specs/`, and incomplete tasks, and tells the user what remains and where it is persisted. Session-close discipline as a mechanism instead of something the user has to remember.
