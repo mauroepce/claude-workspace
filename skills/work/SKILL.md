@@ -27,7 +27,36 @@ Ask, one at a time, waiting for the user's answer before moving on. Don't accept
 5. **Failure modes — what are the 2-3 most likely ways this could go wrong?**
    This is the senior move that prevents most bugs. Push: "If this code runs at 3am with bad data, what happens? If the underlying service times out, what happens?"
 
-Save a structured summary of all 5 answers in a temporary working note. The user will reference this in `/safe-commit` later.
+### Persist the spec (do not skip)
+
+Save a structured summary of all 5 answers to a file — not to conversation memory, which dies with the session:
+
+```bash
+mkdir -p .claude/specs
+```
+
+Write `.claude/specs/<kebab-slug-of-task>.md` with this structure:
+
+```markdown
+# Spec: <task in one sentence (Q1)>
+Date: <today>
+Status: in-progress
+
+## Why now (Q2)
+## Changes / does NOT change (Q3)
+## Success criteria (Q4)
+## Failure modes (Q5)
+```
+
+`/safe-commit` reads this file in its Phase 4 to verify the commit delivers the spec. When the work is committed, update `Status:` to `done`. If the session dies mid-task, a fresh session can resume by reading the newest `in-progress` spec in `.claude/specs/`.
+
+### Confidence gate (go/no-go)
+
+Before moving to Phase 2, state your confidence from 0.0 to 1.0 that you understand **what** to build and **why** — and show the number to the user:
+
+> "Confidence: 0.X — <one line on what's still fuzzy, if anything>"
+
+If confidence is **below 0.9**, do not proceed: ask the specific questions that would raise it. A number forces honesty that "I think I got it" does not. If after two rounds of questions confidence still can't reach 0.9, say so explicitly and let the user decide whether to proceed anyway or reduce scope.
 
 ## Phase 2 — Context
 
@@ -105,7 +134,7 @@ Now you can generate code, following the plan. After each substantial chunk:
 
 After implementation, BEFORE the user invokes `/safe-commit`, walk through these out loud:
 
-- **Did I solve the actual problem from Phase 1?** Re-read the spec; verify the diff matches.
+- **Did I solve the actual problem from Phase 1?** Re-read the spec file from `.claude/specs/`; verify the diff matches.
 - **Did I respect the negative scope?** No drift into "while I'm here, let me also..."
 - **Are the failure modes from Phase 1, Q5 actually handled?** If not, explicitly call them out.
 - **Are there 1-2 obvious tests that would catch regressions?** Suggest them; the user adds or skips.

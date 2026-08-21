@@ -72,11 +72,17 @@ Use a kebab-case slug from the title (max 5 words).
 
 ## Phase 5 — Hand off to /work
 
-Output:
+Save the structured issue summary + the user's additional notes to a file so it survives the session:
 
-> "Issue context loaded. Spec for `/work` ready. Invoke `/work` now and use this issue summary as your input to Phase 1."
+```bash
+mkdir -p .claude/specs
+```
 
-Save the structured issue summary + your additional notes to a temporary working memory the user can reference. The user invokes `/work` next.
+Write `.claude/specs/issue-<number>.md` containing the Phase 2 structured summary plus the Phase 3 notes, with `Status: intake` at the top. When `/work` runs next, its Phase 1 spec replaces `Status: intake` with the full spec in the same file (or a new file that references this one).
+
+Then output:
+
+> "Issue context saved to `.claude/specs/issue-<number>.md`. Invoke `/work` now and use it as your input to Phase 1."
 
 ## What NOT to do
 

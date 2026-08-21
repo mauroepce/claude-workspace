@@ -68,11 +68,21 @@ Same decision tree as Phase 2: blockers stop the commit, warnings prompt the use
 
 ## Phase 4 — Verify spec alignment (if /work was used)
 
-If the user followed `/work` for this task, ask: "Briefly — does this commit deliver the spec from `/work` Phase 1?"
+Check for a persisted spec:
 
-If they say no, suggest splitting the commit (use `git reset` and re-stage) so each commit maps to one spec.
+```bash
+ls -t .claude/specs/*.md 2>/dev/null | head -3
+```
 
-If they didn't use `/work`, skip this phase. Don't lecture them.
+If specs exist, read the newest one with `Status: in-progress`. Compare the staged diff against its "Changes / does NOT change" and "Success criteria" sections, then tell the user:
+
+> "Spec check against `.claude/specs/<file>`: <delivers the spec / partially — X is missing / includes out-of-scope changes: Y>"
+
+If the diff includes changes outside the spec's scope, suggest splitting the commit (`git reset` and re-stage) so each commit maps to one spec. After a commit that completes the spec, update its `Status:` to `done`.
+
+If no spec file exists but the user followed `/work` in this same session, fall back to asking: "Briefly — does this commit deliver the spec from `/work` Phase 1?"
+
+If they didn't use `/work` at all, skip this phase. Don't lecture them.
 
 ## Phase 5 — Commit message
 
