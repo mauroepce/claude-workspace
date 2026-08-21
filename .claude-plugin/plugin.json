@@ -1,8 +1,8 @@
 {
   "name": "claude-workspace",
   "displayName": "Claude Workspace",
-  "version": "2.1.0",
-  "description": "Mauricio's senior workflow for Claude Code: 16 skills (spec-first /work, review gates, codebase onboarding with multi-repo workspace mode), a no-write-tools code-reviewer subagent, and two deterministic hooks: a commit gate and a session-start status push.",
+  "version": "2.2.0",
+  "description": "Mauricio's senior workflow for Claude Code: 16 skills (spec-first /work with persisted specs + confidence gate, review gates, codebase onboarding with multi-repo workspace mode), a no-write-tools code-reviewer subagent, two deterministic hooks (commit gate, session-start status push) and two lifecycle prompt hooks (post-edit self-check, session-close check).",
   "author": {
     "name": "Mauricio Patino",
     "url": "https://github.com/mauroepce"
@@ -10,5 +10,11 @@
   "homepage": "https://github.com/mauroepce/claude-workspace",
   "repository": "https://github.com/mauroepce/claude-workspace",
   "license": "MIT",
-  "keywords": ["workflow", "code-review", "spec-first", "commit-gate", "onboarding"]
+  "keywords": [
+    "workflow",
+    "code-review",
+    "spec-first",
+    "commit-gate",
+    "onboarding"
+  ]
 }

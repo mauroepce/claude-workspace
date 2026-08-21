@@ -125,7 +125,34 @@ The test must:
 
 If a regression test isn't feasible (e.g., the bug is in infrastructure config), document this fact in the commit message and propose an alternative monitoring/alerting.
 
-## Phase 9 — Hand off
+## Phase 9 — Archive the lesson (optional, offer it)
+
+The fix prevents this instance; the archive prevents the class. Offer:
+
+> "Want me to archive this in `docs/mistakes/`? One file: symptom, root cause, prevention checklist. Takes 30 seconds and future sessions (and future you) can check it before repeating the pattern."
+
+If yes, write `docs/mistakes/<YYYY-MM-DD>-<kebab-slug>.md`:
+
+```markdown
+# <one-line symptom>
+Date: <date> · Found in: <file/module>
+
+## Root cause
+<the Phase 5 paragraph — the deeper reason, not the proximate one>
+
+## Fix
+<one line + commit ref if available>
+
+## Prevention checklist
+- [ ] <check that would have caught this before it shipped>
+- [ ] <second check if applicable>
+```
+
+Before writing, glance at existing `docs/mistakes/` entries. If this is the **second-plus occurrence of the same class of bug**, say so and suggest promoting it: either a rule in the project's conventions file or a `docs/patterns/<slug>.md` describing the correct approach — recurring mistakes are conventions waiting to be written.
+
+If the user declines, drop it without insisting.
+
+## Phase 10 — Hand off
 
 If in-scope for `/work`: tell the user to invoke `/safe-commit`. The commit message should reference: original spec + root cause + fix + test.
 

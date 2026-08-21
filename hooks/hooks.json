@@ -20,6 +20,27 @@
           }
         ]
       }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "Verify the edit you just made is correct: check for syntax errors, missing imports, broken references, or logic that contradicts the surrounding code in the changed file. If you find an issue, fix it now and say so briefly. If it is clean, continue without commenting."
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "Before ending: check for uncommitted changes (git status), an in-progress spec in .claude/specs/, or incomplete tasks from this session. If any exist, briefly tell the user what remains and where it is persisted. If the workspace has a STATUS.md convention, remind the user if it was not updated. If everything is clean, end without adding noise."
+          }
+        ]
+      }
     ]
   }
 }
