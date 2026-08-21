@@ -29,11 +29,11 @@ The descriptions are therefore contracts: they state *what the skill does and wh
 
 Forces you through a structured intake before any code generation:
 
-1. **Spec phase** — what, why, what does NOT change, success criteria, failure modes.
+1. **Spec phase** — what, why, what does NOT change, success criteria, failure modes. The spec is **persisted to `.claude/specs/<slug>.md`** (not conversation memory): `/safe-commit` verifies against it, and a fresh session can resume an in-flight task by reading the newest `in-progress` spec. The phase closes with a **confidence gate**: the agent states a 0.0–1.0 confidence that it understands what/why, and below 0.9 it must ask more questions instead of proceeding.
 2. **Context phase** — which files to load, what conventions apply. Auto-loads `.claude/conventions.md` if it exists.
 3. **Plan phase** — a 3–7 line plan you approve before generation starts.
 4. **Implementation phase** — generation, with the agent pausing on judgment calls.
-5. **Self-review phase** — verify the diff matches the spec, no scope drift, failure modes handled.
+5. **Self-review phase** — verify the diff matches the persisted spec, no scope drift, failure modes handled.
 6. **Hand off to `/safe-commit`**.
 
 The win: the spec and failure modes are written down BEFORE generation, so review has a clear baseline. You can't drift into "while I'm here, let me also..." without noticing.
@@ -42,7 +42,7 @@ The win: the spec and failure modes are written down BEFORE generation, so revie
 
 For single-file edits, simple bug fixes, micro-refactors, or anything you'd estimate at <30 minutes. Trades the full spec ceremony for speed while keeping the critical review step.
 
-The discipline distilled to its irreducible minimum: restate the task (catches 50% of misunderstandings), self-check (catches 80% of obvious bugs), hand off to `/safe-commit` if needed. Total session: 5–15 minutes.
+The discipline distilled to its irreducible minimum: restate the task (the cheapest misunderstanding-catcher there is), self-check (catches the obvious breakage before it reaches a commit), hand off to `/safe-commit` if needed. Total session: 5–15 minutes.
 
 If you find yourself doing 2+ `/quick-work` invocations on the same logical task, switch to `/work` — the compounding context cost exceeds the spec ceremony cost.
 
@@ -67,7 +67,7 @@ Workspace-aware: in a parent folder holding multiple repos (no root `.git`, 2+ c
 
 #### `/issue <number>` — GitHub issue intake
 
-Pulls an issue with `gh`, structures the context, surfaces what's NOT defined in the issue body, asks for additional context only you have, optionally creates a branch, and hands off to `/work`.
+Pulls an issue with `gh`, structures the context, surfaces what's NOT defined in the issue body, asks for additional context only you have, optionally creates a branch, saves the intake to `.claude/specs/issue-<number>.md` so it survives the session, and hands off to `/work`.
 
 The win: stops you from interpreting issue bodies generously. The "what's not defined yet" section is where senior judgment adds value — you make implicit ambiguity explicit before generating anything.
 
@@ -131,7 +131,7 @@ Also initializes git (optional) and warns about ancestor CLAUDE.md files that mi
 
 When a bug appears, the temptation is to paste the error and ask for a fix. That loop drives bugs into hiding instead of resolving them.
 
-`/debug` enforces a 9-step discipline:
+`/debug` enforces a 10-step discipline:
 
 1. **Symptom capture** — exact error, full trace, where it appeared, what was expected.
 2. **Reproduction** — minimum repro steps. No fix without repro.
@@ -141,9 +141,10 @@ When a bug appears, the temptation is to paste the error and ask for a fix. That
 6. **Scope decision** — in-scope for current `/work` task, or separate? Resist scope drift.
 7. **Minimal fix** — smallest change that addresses the root cause.
 8. **Regression test** — a test that would have caught this.
-9. **Hand off** to `/safe-commit` (in-scope) or new task (separate).
+9. **Archive the lesson** (optional) — offer to file the bug in `docs/mistakes/` with root cause + prevention checklist. On the second occurrence of the same class, promote it to a convention or a `docs/patterns/` entry — recurring mistakes are conventions waiting to be written.
+10. **Hand off** to `/safe-commit` (in-scope) or new task (separate).
 
-The win: stops the "paste error → first fix → next error" loop. Your hypothesis matching the diagnosis is the calibration signal — if you were wildly wrong, the bug points to a deeper misunderstanding worth investigating.
+The win: stops the "paste error → first fix → next error" loop. Your hypothesis matching the diagnosis is the calibration signal — if you were wildly wrong, the bug points to a deeper misunderstanding worth investigating. The archive step means the fix prevents this instance while the record prevents the class.
 
 #### `/decision` — capture a technical decision
 
@@ -168,7 +169,7 @@ Use standalone when:
 
 #### `/safe-commit` — review before commit
 
-Two-phase review (quality via `/code-review` + security via `/security-review`), verifies the commit maps to your `/work` spec, generates a commit message that explains the **why**, commits only after explicit confirmation. Never bypasses git hooks.
+Two-phase review (quality via `/code-review` + security via `/security-review`), verifies the commit against the persisted spec in `.claude/specs/` (written by `/work`, so the check runs against a file, not against memory), generates a commit message that explains the **why**, commits only after explicit confirmation. Never bypasses git hooks.
 
 The win: catches the obvious failure modes (secret leaks, unintentional auth changes, suspicious diff patterns) before they enter history. Plus commit messages that have business value, not "update files".
 
@@ -339,6 +340,15 @@ The commit gate applied "a hook is code the harness always runs" to reviews. Thi
 - *Workspace-aware for free* — it reads the todos file at the session's root, so a workspace-root todos file (multi-repo tracking) is surfaced exactly like a single-repo one.
 
 Together the two hooks bracket a session: session-status pushes context in at the start; the commit gate blocks unreviewed work at the end.
+
+### Lifecycle prompt hooks (plugin install)
+
+`hooks/hooks.json` also registers two lightweight prompt hooks (these ship with the plugin install; the commit gate above is the only hook the curl installer wires):
+
+- **PostToolUse on `Write|Edit`** — after every file write, the model is prompted to verify its own edit: syntax errors, missing imports, broken references. Issues get fixed immediately instead of surfacing at review time. A cheap always-on quality net between generation and review.
+- **Stop** — before the session ends, the model checks for uncommitted changes, an `in-progress` spec in `.claude/specs/`, and incomplete tasks, and tells the user what remains and where it is persisted. Session-close discipline as a mechanism instead of something the user has to remember.
+
+These two are prompt hooks, not command hooks — they nudge the model reliably at the right moments rather than enforcing deterministically. The commit gate stays a command hook because "no unreviewed diff enters history" must not depend on the model cooperating.
 
 ## Separation of powers: the reviewer subagent
 

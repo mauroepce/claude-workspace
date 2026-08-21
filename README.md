@@ -27,7 +27,7 @@ Inside any Claude Code session:
 /plugin install claude-workspace@mauroepce
 ```
 
-This repo is its own [plugin marketplace](./.claude-plugin/marketplace.json). The plugin ships the 16 skills, the `code-reviewer` subagent AND both deterministic hooks (commit gate, session status) as one managed unit — versioned installs, one-command updates (`/plugin marketplace update mauroepce`), clean uninstall from `/plugin`.
+This repo is its own [plugin marketplace](./.claude-plugin/marketplace.json). The plugin ships the 16 skills, the `code-reviewer` subagent AND the full hook set (commit gate, session-start status push, post-edit self-check, session-close check) as one managed unit — versioned installs, one-command updates (`/plugin marketplace update mauroepce`), clean uninstall from `/plugin`.
 
 Trade-offs vs the curl installer:
 - Plugin skills are namespaced: `/claude-workspace:work` instead of `/work` (auto-invocation by description works identically either way).
