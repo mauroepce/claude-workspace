@@ -79,8 +79,8 @@ If you find yourself doing 2+ `/quick-work` invocations on the same logical task
 
 ## What it DOES do
 
-- Forces the restatement (catches 50% of misunderstandings)
-- Forces the self-check (catches 80% of obvious bugs)
+- Forces the restatement (the cheapest misunderstanding-catcher there is)
+- Forces the self-check (catches the obvious breakage before it reaches a commit)
 - Hands off cleanly to `/safe-commit` if needed
 
 That's the senior discipline distilled to its irreducible minimum.

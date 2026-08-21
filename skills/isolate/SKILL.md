@@ -48,12 +48,12 @@ mkdir -p "<chosen path>"
 cd "<chosen path>"
 
 # Verify: no CLAUDE.md up the parent chain that would auto-load
-parent="<chosen path>/.."
+parent="$(cd "<chosen path>/.." && pwd)"
 while [ "$parent" != "/" ]; do
   if [ -f "$parent/CLAUDE.md" ]; then
     echo "⚠️  Ancestor CLAUDE.md at $parent/CLAUDE.md — Claude Code may auto-load this"
   fi
-  parent="$parent/.."
+  parent="$(dirname "$parent")"
 done
 ```
 

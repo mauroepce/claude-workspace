@@ -4,52 +4,52 @@ description: List all installed personal slash commands with their descriptions,
 
 # /commands — Self-discovery of the toolkit
 
-You are Claude. The user wants to see what personal slash commands they have installed and what each does.
+You are Claude. The user wants to see what personal skills they have installed and what each does.
 
 This is the self-documentation command. Useful when:
 - You've been away from the toolkit for weeks and forgot the names
 - You just installed the toolkit on a new machine
 - You're not sure which command to invoke for a task
 
-## Phase 1 — Scan installed commands
+## Phase 1 — Scan installed skills
 
 ```bash
-ls -t ~/.claude/commands/*.md 2>/dev/null
+ls -dt ~/.claude/skills/*/SKILL.md 2>/dev/null
 ```
 
-If the directory is empty or doesn't exist, output:
+If nothing matches, output:
 
-> "No personal commands installed. Run:
+> "No personal skills installed. Run:
 >
 > curl -fsSL https://raw.githubusercontent.com/mauroepce/claude-workspace/main/bin/install-personal.sh | bash
 >
 > to install Mauricio's toolkit."
 
-If commands exist, proceed.
+If skills exist, proceed. Also check for leftover legacy command files (`ls ~/.claude/commands/*.md 2>/dev/null`) — if any match a skill name, flag them as stale duplicates the installer should have removed.
 
 ## Phase 2 — Extract metadata
 
-For each `.md` file, read the frontmatter and get the `description:` field. Note the file's modified date (the install date or last update).
+For each `SKILL.md`, read the frontmatter and get the `description:` field. The skill's name is its directory name. Note the file's modified date (the install date or last update).
 
-Group commands by category:
+Group skills by category:
 
-| Category | Commands |
+| Category | Skills |
 |---|---|
 | **Task framework** | `/work`, `/quick-work`, `/todo`, `/issue` |
 | **Codebase understanding** | `/conventions`, `/architecture`, `/journeys`, `/onboard` |
 | **Debugging & decisions** | `/debug`, `/decision` |
 | **Code review & commit** | `/code-review`, `/safe-commit`, `/safe-push` |
-| **Scaffolding** | `/scaffold` |
+| **Scaffolding & environment** | `/scaffold`, `/isolate` |
 | **Meta** | `/commands` (this one) |
 
-If a command doesn't fit any category, list it under "Other".
+If a skill doesn't fit any category, list it under "Other".
 
 ## Phase 3 — Output
 
 Present in this format (don't make this fancy — clarity over aesthetics):
 
 ```
-PERSONAL COMMANDS INSTALLED (~/.claude/commands/)
+PERSONAL SKILLS INSTALLED (~/.claude/skills/)
 
 Task framework
   /work         — spec → generate → review → iterate framework
@@ -72,26 +72,27 @@ Code review & commit
   /safe-commit  — runs /code-review + /security-review + commit with confirm
   /safe-push    — full-branch review + push (refuses main without OK)
 
-Scaffolding
+Scaffolding & environment
   /scaffold     — pick a template from ~/.claude/templates/ and insert it
+  /isolate      — clean workspace for tests/interviews (prevents context bleed)
 
 Meta
   /commands     — this command — list everything installed
 
 Last update: <most recent file mtime>
-Total: <count> commands installed
+Total: <count> skills installed
 ```
 
 ## Phase 4 — Offer next step
 
 End with:
 
-> "All command source files live at ~/.claude/commands/. To see a command's full prompt, just `cat ~/.claude/commands/<name>.md`.
+> "All skill source files live at ~/.claude/skills/<name>/SKILL.md. To see a skill's full prompt, just `cat ~/.claude/skills/<name>/SKILL.md`.
 >
 > To update or reinstall: curl -fsSL https://raw.githubusercontent.com/mauroepce/claude-workspace/main/bin/install-personal.sh | bash"
 
 ## What NOT to do
 
-- Don't show stale commands. If a command exists in `~/.claude/commands/` but is no longer in the official PERSONAL_COMMANDS list, flag it: *"⚠ /<name> is installed but not in the official toolkit anymore — consider running install-personal.sh to remove it."*
+- Don't show stale skills. If a skill exists in `~/.claude/skills/` but is no longer in the installer's PERSONAL_SKILLS list, flag it: *"⚠ /<name> is installed but not in the official toolkit anymore — consider running install-personal.sh to remove it."*
 - Don't fabricate descriptions. If the frontmatter is missing or malformed, show "(no description — file may be corrupt)" instead of inventing.
-- Don't add explanation about how each command works in detail — that's `docs/FRAMEWORK.md`. This is just the index.
+- Don't add explanation about how each skill works in detail — that's `docs/FRAMEWORK.md`. This is just the index.
