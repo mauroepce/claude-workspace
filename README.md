@@ -91,10 +91,25 @@ The toolkit's most distinctive habit: open Claude Code **one level above the rep
 
 ```mermaid
 flowchart TD
-    WS["<b>org-workspace/</b> — plain folder, no .git — open Claude Code HERE<br/><br/>INDEX.md (the map) · STATUS.md (where we are)<br/>DECISIONS.md (cross-repo choices) · .claude/todos.md (one focus list)"]
-    WS --> A["service-api/<br/>ordinary git repo<br/>.claude/ per-repo state"]
-    WS --> B["web-front/<br/>ordinary git repo<br/>.claude/ per-repo state"]
-    WS --> N["... more repos"]
+    WS["<b>org-workspace/</b><br/>plain folder · no .git · open Claude Code HERE"]
+
+    subgraph MEM["workspace memory — root files"]
+        direction LR
+        IDX["INDEX.md<br/>the map"]
+        ST["STATUS.md<br/>where we are"]
+        DEC["DECISIONS.md<br/>cross-repo choices"]
+        TODO[".claude/todos.md<br/>one focus list"]
+    end
+
+    subgraph REPOS["ordinary git repos — untouched, unaware of the layer"]
+        direction LR
+        A["service-api/<br/>.claude/ per-repo state"]
+        B["web-front/<br/>.claude/ per-repo state"]
+        N["...more repos"]
+    end
+
+    WS --> MEM
+    WS --> REPOS
 ```
 
 `/onboard` detects this shape automatically (no root `.git`, 2+ child git repos) and builds the `INDEX.md`; `/todo` keeps one focus list across repos; the session-start hook pushes the focused task into context the moment you open the session. The child repos stay untouched — no submodules, no workspace build, nothing to explain to your team. The layer exists for memory, not for tooling: it's what makes "where was I with this client?" a question the session answers instead of asks.
