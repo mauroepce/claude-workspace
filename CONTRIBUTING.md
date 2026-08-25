@@ -2,6 +2,8 @@
 
 Thanks for looking at this. Before you invest time, read this page — it will save both of us a rejected PR.
 
+> **Using Claude Code?** Clone the repo and just tell Claude "I want to contribute X". The repo's own `CLAUDE.md` instructs it to follow this document and walk you through the flow: issue-first for features, the PR checklist, validation before commit. The contribution process is itself an example of the toolkit's methodology (workflow as artifact).
+
 ## What this repo is
 
 A **personal toolkit**, opinionated by design. It encodes one person's workflow, publicly, so others can install it or steal ideas from it. It is not a community framework aiming to cover every use case, and it is **not maintained for backwards compatibility** (renames happen; users re-run the installer to migrate).

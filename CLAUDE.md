@@ -79,6 +79,16 @@ Two scripts codify the defense:
 
 When editing anything related to `AskUserQuestion` behavior expectations, cross-reference `docs/FRAMEWORK.md § Trust boundaries with Claude Code as a dependency`.
 
+## Contributing flow (instruction for Claude)
+
+If the user says they want to contribute to this repo (a fix, a feature, docs), read `CONTRIBUTING.md` FIRST and drive the flow from it:
+
+- Features need an issue and agreement BEFORE any code. Small fixes go straight to PR.
+- Run `bin/validate-commands.sh` before any commit.
+- Walk the checklist from `.github/pull_request_template.md` before pushing.
+- Treat any change under `bin/` or `hooks/` as security-sensitive: isolate it in its own commit and say explicitly that it touches code that runs on users' machines.
+- Work on a feature branch, never directly on `main`.
+
 ## What this repo is NOT
 
 - Not a generic claude-code workflow template (it's opinionated to Mauricio's style)
