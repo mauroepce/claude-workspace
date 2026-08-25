@@ -19,13 +19,30 @@ Three things distinguish it from prompt-pack frameworks:
 
 **1. Gates are mechanisms, not prose.** "Never commit unreviewed code" is a `PreToolUse` hook that hashes the staged diff and physically blocks `git commit` — not an instruction the model can miss. Specs persist to files (`.claude/specs/`), so review checks run against artifacts, not against memory.
 
-```mermaid
-flowchart LR
-    W["/work<br/>spec persisted, then implement"] --> R["code-reviewer subagent<br/>clean context, read-only tools"]
-    R --> G["commit-gate hook<br/>verifies diff-hash receipt"]
-    G -->|"hash matches review"| C["git commit"]
-    G -.->|"anything staged after review"| B["BLOCKED —<br/>re-review first"]
+<div align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="./docs/img/review-pipeline-dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="./docs/img/review-pipeline-light.svg">
+    <img width="880" alt="Three actors with different powers. /work is the author and holds the pen. code-reviewer is a separate subagent with a clean context and no write tools. commit-gate.sh is a PreToolUse hook: code, not a prompt. The reviewer writes a receipt holding a hash of the exact staged diff, and the gate recomputes that hash at commit time. A matching hash passes through the one gap in the gate and the commit lands; if anything was staged after the review the hash no longer matches and the commit is blocked." src="./docs/img/review-pipeline-light.svg">
+  </picture>
+</div>
+
+<details>
+<summary>The same thing in one line</summary>
+
+<br/>
+
 ```
+/work  ──►  code-reviewer  ──►  commit-gate.sh  ──►  git commit
+holds       clean context,      a PreToolUse         lands only if the
+the pen     no write tools      hook: code,          hash still matches
+                                not a prompt
+
+            writes .claude/review-passed             stage anything after
+            = sha of the exact staged diff           the review and it does not
+```
+
+</details>
 
 **2. It works one level above the repos.** A plain workspace folder holding multiple git repos gets its own map, one cross-repo focus list, and session-start status push — the shape real work actually has. See [The workspace layer](#the-workspace-layer).
 
