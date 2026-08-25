@@ -89,28 +89,36 @@ Note: the two lifecycle prompt hooks (post-edit self-check, session-close check)
 
 The toolkit's most distinctive habit: open Claude Code **one level above the repos**, in a plain folder that is not a git repo itself.
 
-```mermaid
-flowchart TD
-    WS["<b>org-workspace/</b><br/>plain folder · no .git · open Claude Code HERE"]
+<div align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="./docs/img/workspace-layer-dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="./docs/img/workspace-layer-light.svg">
+    <img width="880" alt="org-workspace/ is a plain folder with no .git, and the Claude Code session opens there, one level above the repos. Inside it, a band of workspace memory (INDEX.md, STATUS.md, DECISIONS.md, .claude/todos.md) sits above a row of ordinary git repos (service-api/, web-front/, data-jobs/, and ten more), each with its own .git and its own .claude/ state. Nothing couples the two: no submodules, no workspace build, no lockfile." src="./docs/img/workspace-layer-light.svg">
+  </picture>
+</div>
 
-    subgraph MEM["workspace memory — root files"]
-        direction LR
-        IDX["INDEX.md<br/>the map"]
-        ST["STATUS.md<br/>where we are"]
-        DEC["DECISIONS.md<br/>cross-repo choices"]
-        TODO[".claude/todos.md<br/>one focus list"]
-    end
+<details>
+<summary>The same thing as an <code>ls</code></summary>
 
-    subgraph REPOS["ordinary git repos — untouched, unaware of the layer"]
-        direction LR
-        A["service-api/<br/>.claude/ per-repo state"]
-        B["web-front/<br/>.claude/ per-repo state"]
-        N["...more repos"]
-    end
+<br/>
 
-    WS --> MEM
-    WS --> REPOS
 ```
+org-workspace/                 no .git · open Claude Code HERE
+├── INDEX.md                   the map: every repo, what it is, its stack
+├── STATUS.md                  where we are and what happens next
+├── DECISIONS.md               cross-repo choices and their why
+├── .claude/todos.md           one focus list, each task tagged by repo
+│
+├── service-api/               ordinary git repo, untouched
+│   ├── .git/
+│   └── .claude/               its own conventions, architecture, specs
+├── web-front/
+│   ├── .git/
+│   └── .claude/
+└── data-jobs/                 ...and ten more, none of them modified
+```
+
+</details>
 
 `/onboard` detects this shape automatically (no root `.git`, 2+ child git repos) and builds the `INDEX.md`; `/todo` keeps one focus list across repos; the session-start hook pushes the focused task into context the moment you open the session. The child repos stay untouched — no submodules, no workspace build, nothing to explain to your team. The layer exists for memory, not for tooling: it's what makes "where was I with this client?" a question the session answers instead of asks.
 

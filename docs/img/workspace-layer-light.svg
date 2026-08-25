@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 540" width="880" height="540" role="img" aria-labelledby="wl-title wl-desc">
+<title id="wl-title">The workspace layer</title>
+<desc id="wl-desc">A section through org-workspace: the Claude Code session opens at the top, in a plain folder with no .git. Inside it, a warm band of workspace memory files sits above a row of ordinary, untouched git repos, each keeping its own .claude/ state. Nothing connects the two bands: no submodules, no workspace build, no lockfile.</desc>
+<rect x="0" y="0" width="880" height="540" fill="#FDFCFA"/>
+<text x="48" y="34" font-family="ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace" font-size="15"><tspan fill="#8A6A1E">$</tspan><tspan fill="#1F1F24" dx="9">claude</tspan></text>
+<rect x="126" y="22" width="8" height="15" fill="#8A6A1E" fill-opacity="0.75"/>
+<text x="162" y="34" font-family="Iowan Old Style, Palatino, Georgia, Times New Roman, serif" font-size="13" fill="#7A6428" font-style="italic">the session opens here, one level above every repo</text>
+<text x="832" y="34" font-family="ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace" font-size="10.5" fill="#5E5E68" text-anchor="end">not a monorepo  ·  not a meta-repo</text>
+<line x1="52" y1="46" x2="52" y2="66" stroke="#C9A84C" stroke-width="1.2" stroke-opacity="0.8"/>
+<path d="M 46 64 L 58 64 L 52 74 Z" fill="#C9A84C" fill-opacity="0.85"/>
+<rect x="28" y="76" width="824" height="438" fill="none" stroke="#C9A84C" stroke-width="1.25" stroke-opacity="0.65"/>
+<text x="48" y="101" font-family="ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace" font-size="17" fill="#1F1F24" font-weight="500">org-workspace/</text>
+<text x="206" y="101" font-family="Iowan Old Style, Palatino, Georgia, Times New Roman, serif" font-size="12.5" fill="#63636D" font-style="italic">a plain folder</text>
+<rect x="766" y="87" width="66" height="20" fill="none" stroke="#C9A84C" stroke-width="1" rx="3" stroke-opacity="0.6"/>
+<text x="799" y="101" font-family="ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace" font-size="10.5" fill="#8A6A1E" text-anchor="middle">no .git</text>
+<line x1="28" y1="112" x2="852" y2="112" stroke="#C9A84C" stroke-width="1" stroke-opacity="0.3"/>
+<rect x="29" y="112" width="822" height="168" fill="#FAF5E9"/>
+<line x1="28" y1="280" x2="852" y2="280" stroke="#C9A84C" stroke-width="1" stroke-opacity="0.22"/>
+<text x="48" y="140" font-family="Iowan Old Style, Palatino, Georgia, Times New Roman, serif" font-size="11" fill="#8A6A1E" font-weight="600" letter-spacing="1.7">WORKSPACE MEMORY</text>
+<text x="214" y="140" font-family="Iowan Old Style, Palatino, Georgia, Times New Roman, serif" font-size="12" fill="#6E6350" font-style="italic">state no single repo could own</text>
+<text x="832" y="140" font-family="Iowan Old Style, Palatino, Georgia, Times New Roman, serif" font-size="12" fill="#7A6428" font-style="italic" text-anchor="end">the layer holds memory</text>
+<path d="M 48.0 154 L 217.0 154 L 232.0 169 L 232.0 258 L 48.0 258 Z" fill="#FFFDF7" stroke="#C9A84C" stroke-width="1" stroke-opacity="0.75"/>
+<path d="M 217.0 154 L 217.0 169 L 232.0 169 Z" fill="#F0E6CC" stroke="#C9A84C" stroke-width="1" stroke-opacity="0.75"/>
+<text x="63.0" y="186" font-family="ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace" font-size="14" fill="#2A241A">INDEX.md</text>
+<line x1="63.0" y1="197" x2="99.0" y2="197" stroke="#C9A84C" stroke-width="1.4" stroke-opacity="0.85"/>
+<text x="63.0" y="218" font-family="Iowan Old Style, Palatino, Georgia, Times New Roman, serif" font-size="12" fill="#6E6350">the map: every repo,</text>
+<text x="63.0" y="235" font-family="Iowan Old Style, Palatino, Georgia, Times New Roman, serif" font-size="12" fill="#6E6350">what it is, its stack</text>
+<path d="M 248.0 154 L 417.0 154 L 432.0 169 L 432.0 258 L 248.0 258 Z" fill="#FFFDF7" stroke="#C9A84C" stroke-width="1" stroke-opacity="0.75"/>
+<path d="M 417.0 154 L 417.0 169 L 432.0 169 Z" fill="#F0E6CC" stroke="#C9A84C" stroke-width="1" stroke-opacity="0.75"/>
+<text x="263.0" y="186" font-family="ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace" font-size="14" fill="#2A241A">STATUS.md</text>
+<line x1="263.0" y1="197" x2="299.0" y2="197" stroke="#C9A84C" stroke-width="1.4" stroke-opacity="0.85"/>
+<text x="263.0" y="218" font-family="Iowan Old Style, Palatino, Georgia, Times New Roman, serif" font-size="12" fill="#6E6350">where we are and</text>
+<text x="263.0" y="235" font-family="Iowan Old Style, Palatino, Georgia, Times New Roman, serif" font-size="12" fill="#6E6350">what happens next</text>
+<path d="M 448.0 154 L 617.0 154 L 632.0 169 L 632.0 258 L 448.0 258 Z" fill="#FFFDF7" stroke="#C9A84C" stroke-width="1" stroke-opacity="0.75"/>
+<path d="M 617.0 154 L 617.0 169 L 632.0 169 Z" fill="#F0E6CC" stroke="#C9A84C" stroke-width="1" stroke-opacity="0.75"/>
+<text x="463.0" y="186" font-family="ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace" font-size="14" fill="#2A241A">DECISIONS.md</text>
+<line x1="463.0" y1="197" x2="499.0" y2="197" stroke="#C9A84C" stroke-width="1.4" stroke-opacity="0.85"/>
+<text x="463.0" y="218" font-family="Iowan Old Style, Palatino, Georgia, Times New Roman, serif" font-size="12" fill="#6E6350">cross-repo choices</text>
+<text x="463.0" y="235" font-family="Iowan Old Style, Palatino, Georgia, Times New Roman, serif" font-size="12" fill="#6E6350">and their why</text>
+<path d="M 648.0 154 L 817.0 154 L 832.0 169 L 832.0 258 L 648.0 258 Z" fill="#FFFDF7" stroke="#C9A84C" stroke-width="1" stroke-opacity="0.75"/>
+<path d="M 817.0 154 L 817.0 169 L 832.0 169 Z" fill="#F0E6CC" stroke="#C9A84C" stroke-width="1" stroke-opacity="0.75"/>
+<text x="663.0" y="186" font-family="ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace" font-size="14" fill="#2A241A">.claude/todos.md</text>
+<line x1="663.0" y1="197" x2="699.0" y2="197" stroke="#C9A84C" stroke-width="1.4" stroke-opacity="0.85"/>
+<text x="663.0" y="218" font-family="Iowan Old Style, Palatino, Georgia, Times New Roman, serif" font-size="12" fill="#6E6350">one focus list, each</text>
+<text x="663.0" y="235" font-family="Iowan Old Style, Palatino, Georgia, Times New Roman, serif" font-size="12" fill="#6E6350">task tagged by repo</text>
+<line x1="48" y1="306" x2="255" y2="306" stroke="#C9A84C" stroke-width="1" stroke-opacity="0.55"/>
+<line x1="625" y1="306" x2="832" y2="306" stroke="#C9A84C" stroke-width="1" stroke-opacity="0.55"/>
+<text x="440" y="310" font-family="ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace" font-size="10.5" fill="#8A6A1E" text-anchor="middle">no submodules  ·  no workspace build  ·  no lockfile</text>
+<text x="48" y="336" font-family="Iowan Old Style, Palatino, Georgia, Times New Roman, serif" font-size="11" fill="#5E5E68" font-weight="600" letter-spacing="1.7">ORDINARY GIT REPOS</text>
+<text x="226" y="336" font-family="Iowan Old Style, Palatino, Georgia, Times New Roman, serif" font-size="12" fill="#63636D" font-style="italic">untouched, unaware the layer exists</text>
+<text x="832" y="336" font-family="Iowan Old Style, Palatino, Georgia, Times New Roman, serif" font-size="12" fill="#63636D" font-style="italic" text-anchor="end">the repos just hold code</text>
+<path d="M 48.0 352 L 94.0 352 L 105.0 363 L 232.0 363 L 232.0 496 L 48.0 496 Z" fill="#F4F4F6" stroke="#C3C3CC" stroke-width="1"/>
+<text x="64.0" y="390" font-family="ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace" font-size="14" fill="#2C2C33">service-api/</text>
+<rect x="64.0" y="400" width="48" height="18" fill="#EDEDF1" stroke="#C3C3CC" stroke-width="1" rx="3"/>
+<text x="88.0" y="413" font-family="ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace" font-size="10" fill="#63636D" text-anchor="middle">.git</text>
+<rect x="64.0" y="428" width="152.0" height="56" fill="none" stroke="#C3C3CC" stroke-width="1" stroke-dasharray="3 3"/>
+<text x="78.0" y="447" font-family="ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace" font-size="11" fill="#2C2C33">.claude/</text>
+<text x="78.0" y="462" font-family="Iowan Old Style, Palatino, Georgia, Times New Roman, serif" font-size="10.5" fill="#63636D">conventions,</text>
+<text x="78.0" y="476" font-family="Iowan Old Style, Palatino, Georgia, Times New Roman, serif" font-size="10.5" fill="#63636D">architecture, specs</text>
+<path d="M 248.0 352 L 294.0 352 L 305.0 363 L 432.0 363 L 432.0 496 L 248.0 496 Z" fill="#F4F4F6" stroke="#C3C3CC" stroke-width="1"/>
+<text x="264.0" y="390" font-family="ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace" font-size="14" fill="#2C2C33">web-front/</text>
+<rect x="264.0" y="400" width="48" height="18" fill="#EDEDF1" stroke="#C3C3CC" stroke-width="1" rx="3"/>
+<text x="288.0" y="413" font-family="ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace" font-size="10" fill="#63636D" text-anchor="middle">.git</text>
+<rect x="264.0" y="428" width="152.0" height="56" fill="none" stroke="#C3C3CC" stroke-width="1" stroke-dasharray="3 3"/>
+<text x="278.0" y="447" font-family="ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace" font-size="11" fill="#2C2C33">.claude/</text>
+<text x="278.0" y="462" font-family="Iowan Old Style, Palatino, Georgia, Times New Roman, serif" font-size="10.5" fill="#63636D">conventions,</text>
+<text x="278.0" y="476" font-family="Iowan Old Style, Palatino, Georgia, Times New Roman, serif" font-size="10.5" fill="#63636D">architecture, specs</text>
+<path d="M 448.0 352 L 494.0 352 L 505.0 363 L 632.0 363 L 632.0 496 L 448.0 496 Z" fill="#F4F4F6" stroke="#C3C3CC" stroke-width="1"/>
+<text x="464.0" y="390" font-family="ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace" font-size="14" fill="#2C2C33">data-jobs/</text>
+<rect x="464.0" y="400" width="48" height="18" fill="#EDEDF1" stroke="#C3C3CC" stroke-width="1" rx="3"/>
+<text x="488.0" y="413" font-family="ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace" font-size="10" fill="#63636D" text-anchor="middle">.git</text>
+<rect x="464.0" y="428" width="152.0" height="56" fill="none" stroke="#C3C3CC" stroke-width="1" stroke-dasharray="3 3"/>
+<text x="478.0" y="447" font-family="ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace" font-size="11" fill="#2C2C33">.claude/</text>
+<text x="478.0" y="462" font-family="Iowan Old Style, Palatino, Georgia, Times New Roman, serif" font-size="10.5" fill="#63636D">conventions,</text>
+<text x="478.0" y="476" font-family="Iowan Old Style, Palatino, Georgia, Times New Roman, serif" font-size="10.5" fill="#63636D">architecture, specs</text>
+<path d="M 648.0 352 L 694.0 352 L 705.0 363 L 832.0 363 L 832.0 496 L 648.0 496 Z" fill="none" stroke="#CFCFD7" stroke-width="1" stroke-dasharray="4 4"/>
+<text x="740.0" y="418" font-family="Iowan Old Style, Palatino, Georgia, Times New Roman, serif" font-size="14" fill="#70707A" font-style="italic" text-anchor="middle">ten more repos</text>
+<text x="740.0" y="446" font-family="Iowan Old Style, Palatino, Georgia, Times New Roman, serif" font-size="11.5" fill="#70707A" text-anchor="middle">none of them modified</text>
+</svg>

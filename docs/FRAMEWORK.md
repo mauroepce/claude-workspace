@@ -241,16 +241,38 @@ Most agent tooling assumes the unit of work is a repo. Real work often is not: a
 
 The pattern this toolkit converged on: a plain parent folder — not itself a git repo — that holds the agent-facing state, with ordinary git repos below it:
 
+<div align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="./img/workspace-layer-dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="./img/workspace-layer-light.svg">
+    <img width="880" alt="org-workspace/ is a plain folder with no .git, and the Claude Code session opens there, one level above the repos. Inside it, a band of workspace memory (INDEX.md, STATUS.md, DECISIONS.md, .claude/todos.md) sits above a row of ordinary git repos (service-api/, web-front/, data-jobs/, and ten more), each with its own .git and its own .claude/ state. Nothing couples the two: no submodules, no workspace build, no lockfile." src="./img/workspace-layer-light.svg">
+  </picture>
+</div>
+
+<details>
+<summary>The same thing as an <code>ls</code></summary>
+
+<br/>
+
 ```
-org-workspace/                  ← no .git here; open Claude Code HERE
-├── INDEX.md                    ← the map: repo | what it is | stack | last activity
-├── .claude/todos.md            ← cross-repo tasks, each tagged "Repo:"
-├── decisions-log.md            ← decisions no single repo owns
-├── service-api/                ← ordinary git repo
-│   └── .claude/                ← per-repo artifacts: conventions, architecture, specs
-└── web-front/                  ← ordinary git repo
-    └── .claude/
+org-workspace/                 no .git · open Claude Code HERE
+├── INDEX.md                   the map: every repo, what it is, its stack
+├── STATUS.md                  where we are and what happens next
+├── DECISIONS.md               cross-repo choices and their why
+├── .claude/todos.md           one focus list, each task tagged by repo
+│
+├── service-api/               ordinary git repo, untouched
+│   ├── .git/
+│   └── .claude/               its own conventions, architecture, specs
+├── web-front/
+│   ├── .git/
+│   └── .claude/
+└── data-jobs/                 ...and ten more, none of them modified
 ```
+
+</details>
+
+The regenerable source is `docs/img/gen-workspace-layer.py` — it writes both theme variants from one description, so they cannot drift apart.
 
 The skills already cooperate at this layer without configuration:
 
