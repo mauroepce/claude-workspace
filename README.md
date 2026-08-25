@@ -6,6 +6,12 @@
 
 Each skill works two ways: invoke it manually (`/work`, `/conventions`, ...) exactly like the slash commands they evolved from, or let Claude **auto-activate** it — Claude reads each skill's description and applies the matching one when your request calls for it, without being asked. The methodology applies itself even when you forget to invoke it.
 
+Three things distinguish it from prompt-pack frameworks:
+
+- **Gates are mechanisms, not prose.** "Never commit unreviewed code" is a `PreToolUse` hook that hashes the staged diff and physically blocks `git commit` — not an instruction the model can miss. Specs persist to files (`.claude/specs/`), so review checks run against artifacts, not against memory.
+- **It works one level above the repos.** A plain workspace folder holding multiple git repos gets its own map (`INDEX.md`), one cross-repo focus list, and session-start status push — the shape real work actually has (an org's repos, a service + front pair). See [The workspace layer](#the-workspace-layer).
+- **Separation of powers.** The reviewer is a separate subagent with a clean context and no write tools; the author physically cannot review its own work with its own biases.
+
 ## What it is
 
 A codified senior workflow with five core principles:
@@ -91,6 +97,23 @@ This means:
 - Use my framework freely in new projects
 - Inherit your personal workflow when joining team repos
 - Zero friction: nothing to commit to a team's repo just to use my toolkit
+
+## The workspace layer
+
+The toolkit's most distinctive habit: open Claude Code **one level above the repos**, in a plain folder that is not a git repo itself.
+
+```
+org-workspace/                  ← no .git here; open Claude Code HERE
+├── INDEX.md                    ← the map: repo | what it is | stack | last activity
+├── .claude/todos.md            ← cross-repo tasks, each tagged "Repo:"
+├── decisions-log.md            ← decisions no single repo owns
+├── service-api/                ← ordinary git repo (own .claude/ artifacts)
+└── web-front/                  ← ordinary git repo (own .claude/ artifacts)
+```
+
+`/onboard` detects this shape and builds the `INDEX.md`; `/todo` keeps one focus list across repos; the session-start hook pushes the focused task into context the moment you open the session. The child repos stay untouched — no submodules, no workspace build, nothing to explain to your team. The layer exists for memory, not for tooling: it's what makes "where was I with this client?" a question the session answers instead of asks.
+
+Works for an organization's repo fleet, a service + front product pair, or any multi-item pipeline you steer with an agent. Details in [`docs/FRAMEWORK.md`](./docs/FRAMEWORK.md#the-workspace-layer-state-one-level-above-the-repos).
 
 ## Templates
 

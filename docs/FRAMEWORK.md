@@ -235,6 +235,39 @@ The orchestrator and the atoms coexist. Use the atom when you need surgical feed
 
 The implicit rule: persist your codebase artifacts (conventions, architecture, journeys, decisions) once, and they ambient-flow into subsequent work. That's the persistence-as-context-engineering idea distilled.
 
+## The workspace layer: state one level above the repos
+
+Most agent tooling assumes the unit of work is a repo. Real work often is not: an organization hands you six repos; a product is a service repo plus a front repo; a client engagement is a folder of related codebases. The question nobody answers is **where the agent's memory lives when the work spans repos** — conventions and architecture belong to each repo, but the focus ("what am I doing across this org this week"), the map ("which repo does what"), and the cross-cutting decisions belong to none of them.
+
+The pattern this toolkit converged on: a plain parent folder — not itself a git repo — that holds the agent-facing state, with ordinary git repos below it:
+
+```
+org-workspace/                  ← no .git here; open Claude Code HERE
+├── INDEX.md                    ← the map: repo | what it is | stack | last activity
+├── .claude/todos.md            ← cross-repo tasks, each tagged "Repo:"
+├── decisions-log.md            ← decisions no single repo owns
+├── service-api/                ← ordinary git repo
+│   └── .claude/                ← per-repo artifacts: conventions, architecture, specs
+└── web-front/                  ← ordinary git repo
+    └── .claude/
+```
+
+The skills already cooperate at this layer without configuration:
+
+- `/onboard` detects a workspace folder (no root `.git`, 2+ child git repos) and produces the root `INDEX.md` plus full per-repo packages on demand, instead of one muddled cross-stack report.
+- `/todo` keeps the task list at the workspace root with `Repo:` tags; a single focus list for work that hops between repos.
+- The **session-status hook** reads that root todos file, so opening Claude Code at the workspace root starts the session already knowing the focused task and its next milestone.
+- `/decision` at the root records the choices that span repos ("front consumes service errors as RFC 7807", "auth lives in the service, front only refreshes tokens").
+- Per-repo state stays in each repo, where its git history belongs.
+
+Why this is neither a monorepo nor a meta-repo: there is no tooling coupling. No submodules, no workspace-level build, no lockfile — the child repos are untouched and unaware the layer exists. The workspace exists for **memory, not for builds**: it is the place the agent (and you, three weeks later) reads first. Which is also why adoption costs nothing: `mkdir`, drop the repos in, run `/onboard` once, open Claude Code at the root.
+
+Daily shapes this serves:
+
+- **The org workspace** — one folder per organization you work with, its repos below, one INDEX and one focus list for the whole engagement.
+- **The product pair** — service + front. Cross-repo features are the norm ("add the endpoint, then consume it"), and this is exactly the shape single-repo tooling handles worst.
+- **The application/project tracker** — subfolders that are not code at all (each with its own STATUS.md), the same layer applied to any multi-item pipeline you steer with an agent.
+
 ## Trust boundaries with Claude Code as a dependency
 
 The framework is a **layer built on top of Claude Code**. Every safety gate — `/work` Phase 1 spec questions, `/safe-commit` confirmation, `/safe-push` production checks, `/debug` hypothesis capture — depends on Claude Code's `AskUserQuestion` tool blocking indefinitely until the user responds.
