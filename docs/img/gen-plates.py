@@ -459,11 +459,246 @@ def build_pipeline(p):
     return "\n".join(o) + "\n"
 
 
+# ===========================================================================
+#  PLATE 3 — terrain detection: three grounds, one look
+# ===========================================================================
+# Drawn as an identification plate rather than a flowchart: three specimens
+# side by side, each with the mark you look for and what follows from it.
+# The mark is a tiny drawing of the filesystem, so the reader identifies the
+# terrain the same way the toolkit does — by looking at where .git is.
+
+P3W, P3H = 880, 448
+P3FX, P3FY, P3FW, P3FH = 28, 76, 824, 340
+P3FR = P3FX + P3FW
+
+TERRAINS = [
+    ("WORKSPACE", "workspace", "no .git here, but the children have one",
+     "root INDEX.md, then a full package", "per repo, only when you ask"),
+    ("TEAM REPO", "team", "the repo commits its own .claude/",
+     "every artifact becomes *.local.md,", "excluded through .git/info/exclude"),
+    ("CLASSIC", "classic", "a repo, and the tooling is yours",
+     "artifacts are committed normally", "and become the project's memory"),
+]
+
+
+def _folder(x, y, w, h, fill, stroke, dash=None):
+    """Small folder silhouette with a tab, used for the specimen sketches."""
+    tab = min(38, w * 0.34)
+    d = (f'M {x} {y+10} L {x+tab} {y+10} L {x+tab+7} {y} L {x+w} {y} '
+         f'L {x+w} {y+h} L {x} {y+h} Z')
+    extra = f' stroke-dasharray="{dash}"' if dash else ""
+    return (f'<path d="{d}" fill="{fill}" stroke="{stroke}" '
+            f'stroke-width="1"{extra}/>')
+
+
+def build_terrain(p):
+    o = []
+    A = o.append
+    A(f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {P3W} {P3H}" '
+      f'width="{P3W}" height="{P3H}" role="img" '
+      f'aria-labelledby="tr-title tr-desc">')
+    A('<title id="tr-title">Terrain detection</title>')
+    A('<desc id="tr-desc">Before onboarding, the toolkit identifies which of '
+      'three grounds it is standing on. A workspace folder has no .git of its '
+      'own but two or more children that do, so it gets a root INDEX.md plus '
+      'per-repo packages on demand. A team repo commits its own .claude or '
+      'CLAUDE.md, so every artifact is written as a local file and excluded '
+      'through .git/info/exclude. A classic repo you own gets its artifacts '
+      'committed normally.</desc>')
+    A(rect(0, 0, P3W, P3H, fill=p["ground"]))
+
+    A(f'<text x="48" y="34" font-family="{MONO}" font-size="15">'
+      f'<tspan fill="{p["gold_text"]}">$</tspan>'
+      f'<tspan fill="{p["ink"]}" dx="9">/onboard</tspan></text>')
+    A(txt(174, 34, "before anything else, it works out what ground it is "
+          "standing on", size=13, fill=p["gold_soft"], style="italic"))
+    A(txt(P3FR - 20, 34, "three terrains  ·  zero flags", size=10.5,
+          fill=p["repo_label"], family=MONO, anchor="end"))
+
+    A(rect(P3FX, P3FY, P3FW, P3FH, fill="none", stroke=p["frame"], sw=1.25,
+           sop=p["frame_op"]))
+    A(txt(48, 101, "terrain detection", size=17, fill=p["ink"], family=MONO,
+          weight="500"))
+    A(txt(250, 101, "the same two questions, every time", size=12.5,
+          fill=p["repo_gloss"], style="italic"))
+    A(rect(P3FR - 116, 87, 96, 20, fill="none", stroke=p["hair"], sw=1, rx=3,
+           sop="0.6"))
+    A(txt(P3FR - 68, 101, "no flags", size=10.5, fill=p["gold_text"],
+          family=MONO, anchor="middle"))
+    A(line(P3FX, 112, P3FR, 112, p["hair"], 1, op="0.3"))
+    A(rect(P3FX + 1, 112, P3FW - 2, P3FH - 36, fill=p["band"]))
+
+    tx, tw = _grid(len(TERRAINS))
+    CY, CH = 132, 262
+
+    for (label, kind, mark, w1, w2), x in zip(TERRAINS, tx):
+        A(rect(x, CY, tw, CH, fill=p["card"], stroke=p["card_stroke"], sw=1,
+               sop=p["card_stroke_op"]))
+        A(txt(x + tw / 2, CY + 28, label, size=11, fill=p["gold_text"],
+              weight="600", ls="1.8", anchor="middle"))
+        A(line(x + 20, CY + 40, x + tw - 20, CY + 40, p["hair"], 1, op="0.25"))
+
+        # ---- the specimen: where .git is, drawn ----
+        sx, sy, sw_ = x + 26, CY + 58, tw - 52
+        if kind == "workspace":
+            A(_folder(sx, sy, sw_, 96, "none", p["card_stroke"], dash="4 3"))
+            A(rect(sx + sw_ - 62, sy + 16, 52, 16, fill="none",
+                   stroke=p["hair"], sw=1, rx=3, sop="0.7"))
+            A(txt(sx + sw_ - 36, sy + 28, "no .git", size=8.5,
+                  fill=p["gold_text"], family=MONO, anchor="middle"))
+            for i in range(2):
+                cx = sx + 14 + i * ((sw_ - 28) / 2)
+                A(_folder(cx, sy + 44, (sw_ - 40) / 2, 40, p["repo_fill"],
+                          p["repo_stroke"]))
+                A(txt(cx + 10, sy + 70, ".git", size=8.5, fill=p["repo_gloss"],
+                      family=MONO))
+        else:
+            A(_folder(sx, sy, sw_, 96, p["repo_fill"], p["repo_stroke"]))
+            A(rect(sx + sw_ - 52, sy + 16, 42, 16, fill=p["chip_fill"],
+                   stroke=p["repo_stroke"], sw=1, rx=3))
+            A(txt(sx + sw_ - 31, sy + 28, ".git", size=8.5,
+                  fill=p["repo_gloss"], family=MONO, anchor="middle"))
+            committed = kind == "team"
+            A(rect(sx + 14, sy + 46, sw_ - 28, 36, fill="none",
+                   stroke=p["hair"] if committed else p["repo_stroke"], sw=1,
+                   rx=2, dash=None if committed else "3 3",
+                   sop="0.8" if committed else None))
+            A(txt(sx + 26, sy + 62, ".claude/", size=9.5,
+                  fill=p["gold_text"] if committed else p["repo_gloss"],
+                  family=MONO))
+            A(txt(sx + 26, sy + 76, "tracked by them" if committed
+                  else "yours, untracked", size=8.5,
+                  fill=p["file_gloss"] if committed else p["repo_gloss"],
+                  style="italic"))
+
+        # ---- the mark, and what follows from it ----
+        A(line(x + 20, CY + 172, x + tw - 20, CY + 172, p["hair"], 1, op="0.2"))
+        A(txt(x + 22, CY + 194, "THE MARK", size=8.5, fill=p["file_gloss"],
+              weight="600", ls="1.4"))
+        A(txt(x + 22, CY + 212, mark, size=10, fill=p["file_ink"],
+              style="italic"))
+        A(txt(x + 22, CY + 236, w1, size=10.5, fill=p["file_gloss"],
+              family=MONO))
+        A(txt(x + 22, CY + 252, w2, size=10.5, fill=p["file_gloss"],
+              family=MONO))
+
+    A("</svg>")
+    return "\n".join(o) + "\n"
+
+
+# ===========================================================================
+#  PLATE 4 — one session, bracketed by two hooks
+# ===========================================================================
+# The session is drawn dashed because it evaporates; the files are drawn solid
+# and warm, the same material plate 1 gave the workspace memory. The whole
+# argument is the two arrows: the session reads up from the files when it
+# opens, and writes back down to them when it closes.
+
+P4W, P4H = 880, 412
+P4FX, P4FY, P4FW, P4FH = 28, 76, 824, 304
+P4FR = P4FX + P4FW
+
+MOMENTS = [
+    ("THE SESSION OPENS", "SessionStart hook", "reads the todos file before",
+     "your first word"),
+    ("YOU WORK", "from files, not memory", "the focused task and its next",
+     "milestone are already in context"),
+    ("THE SESSION ENDS", "Stop hook", "names what is still open",
+     "before you walk away"),
+]
+PERSISTS = [".claude/todos.md", ".claude/specs/", "DECISIONS.md"]
+
+
+def build_session(p):
+    o = []
+    A = o.append
+    A(f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {P4W} {P4H}" '
+      f'width="{P4W}" height="{P4H}" role="img" '
+      f'aria-labelledby="se-title se-desc">')
+    A('<title id="se-title">One session, bracketed by two hooks</title>')
+    A('<desc id="se-desc">A session is transient and the files are not. When '
+      'the session opens, a SessionStart hook reads the todos file and pushes '
+      'the focused task and its next milestone into context before your first '
+      'word. You work from files rather than from memory. When the session '
+      'ends, a Stop hook names what is still open: uncommitted changes and '
+      'in-progress specs. The files persist between sessions.</desc>')
+    A(rect(0, 0, P4W, P4H, fill=p["ground"]))
+
+    A(f'<text x="48" y="34" font-family="{MONO}" font-size="15">'
+      f'<tspan fill="{p["gold_text"]}">$</tspan>'
+      f'<tspan fill="{p["ink"]}" dx="9">claude</tspan></text>')
+    A(txt(150, 34, "you come back a week later and ask where you were",
+          size=13, fill=p["gold_soft"], style="italic"))
+    A(txt(P4FR - 20, 34, "the session is transient  ·  the files are not",
+          size=10.5, fill=p["repo_label"], family=MONO, anchor="end"))
+
+    A(rect(P4FX, P4FY, P4FW, P4FH, fill="none", stroke=p["frame"], sw=1.25,
+           sop=p["frame_op"]))
+    A(txt(48, 101, "one session, bracketed", size=17, fill=p["ink"],
+          family=MONO, weight="500"))
+    A(txt(296, 101, "a hook at each end, and files underneath", size=12.5,
+          fill=p["repo_gloss"], style="italic"))
+    A(line(P4FX, 112, P4FR, 112, p["hair"], 1, op="0.3"))
+
+    mx, mw = _grid(len(MOMENTS))
+    SY, SH = 132, 92
+
+    for (label, mech, l1, l2), x in zip(MOMENTS, mx):
+        # dashed: this band does not survive the session
+        A(rect(x, SY, mw, SH, fill="none", stroke=p["repo_stroke"], sw=1,
+               dash="5 4"))
+        A(txt(x + 18, SY + 26, label, size=9.5, fill=p["repo_label"],
+              weight="600", ls="1.5"))
+        A(txt(x + 18, SY + 48, mech, size=11.5, fill=p["repo_ink"],
+              family=MONO))
+        A(txt(x + 18, SY + 66, l1, size=10.5, fill=p["repo_gloss"],
+              style="italic"))
+        A(txt(x + 18, SY + 80, l2, size=10.5, fill=p["repo_gloss"],
+              style="italic"))
+
+    # ---- the substrate: warm, solid, permanent ----
+    BY, BH = 286, 74
+    A(rect(P4FX + 1, BY, P4FW - 2, BH, fill=p["band"]))
+    A(line(P4FX, BY, P4FR, BY, p["hair"], 1, op="0.22"))
+    A(txt(48, BY + 26, "WHAT PERSISTS", size=11, fill=p["gold_text"],
+          weight="600", ls="1.7"))
+    A(txt(176, BY + 26, "written to disk, read back by the next session",
+          size=12, fill=p["file_gloss"], style="italic"))
+
+    fx = 48
+    for name in PERSISTS:
+        w = 9.2 * len(name) + 26
+        A(rect(fx, BY + 40, w, 22, fill=p["card"], stroke=p["card_stroke"],
+               sw=1, rx=3, sop=p["card_stroke_op"]))
+        A(txt(fx + w / 2, BY + 55, name, size=10.5, fill=p["file_ink"],
+              family=MONO, anchor="middle"))
+        fx += w + 14
+
+    # ---- the two arrows: the whole argument ----
+    up_x = mx[0] + 40
+    A(line(up_x, BY - 8, up_x, SY + SH + 16, p["hair"], 1.4, op="0.9"))
+    A(f'<path d="M {up_x-5.5} {SY+SH+16} L {up_x} {SY+SH+5} '
+      f'L {up_x+5.5} {SY+SH+16} Z" fill="{p["hair"]}"/>')
+    A(txt(up_x + 12, SY + SH + 32, "read up at open", size=10.5,
+          fill=p["gold_soft"], style="italic"))
+
+    dn_x = mx[2] + mw - 40
+    A(line(dn_x, SY + SH + 5, dn_x, BY - 16, p["hair"], 1.4, op="0.9"))
+    A(f'<path d="M {dn_x-5.5} {BY-16} L {dn_x} {BY-5} L {dn_x+5.5} {BY-16} Z" '
+      f'fill="{p["hair"]}"/>')
+    A(txt(dn_x - 12, SY + SH + 32, "written down at close", size=10.5,
+          fill=p["gold_soft"], style="italic", anchor="end"))
+
+    A("</svg>")
+    return "\n".join(o) + "\n"
+
 if __name__ == "__main__":
     import sys
     out = sys.argv[1] if len(sys.argv) > 1 else "."
     plates = (("workspace-layer", build_workspace),
-              ("review-pipeline", build_pipeline))
+              ("review-pipeline", build_pipeline),
+              ("terrain-detection", build_terrain),
+              ("session-bracket", build_session))
     for stem, fn in plates:
         for name, pal in (("light", LIGHT), ("dark", DARK)):
             path = f"{out}/{stem}-{name}.svg"

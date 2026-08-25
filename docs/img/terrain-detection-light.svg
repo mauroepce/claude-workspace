@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 448" width="880" height="448" role="img" aria-labelledby="tr-title tr-desc">
+<title id="tr-title">Terrain detection</title>
+<desc id="tr-desc">Before onboarding, the toolkit identifies which of three grounds it is standing on. A workspace folder has no .git of its own but two or more children that do, so it gets a root INDEX.md plus per-repo packages on demand. A team repo commits its own .claude or CLAUDE.md, so every artifact is written as a local file and excluded through .git/info/exclude. A classic repo you own gets its artifacts committed normally.</desc>
+<rect x="0" y="0" width="880" height="448" fill="#FDFCFA"/>
+<text x="48" y="34" font-family="ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace" font-size="15"><tspan fill="#8A6A1E">$</tspan><tspan fill="#1F1F24" dx="9">/onboard</tspan></text>
+<text x="174" y="34" font-family="Iowan Old Style, Palatino, Georgia, Times New Roman, serif" font-size="13" fill="#7A6428" font-style="italic">before anything else, it works out what ground it is standing on</text>
+<text x="832" y="34" font-family="ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace" font-size="10.5" fill="#5E5E68" text-anchor="end">three terrains  ·  zero flags</text>
+<rect x="28" y="76" width="824" height="340" fill="none" stroke="#C9A84C" stroke-width="1.25" stroke-opacity="0.65"/>
+<text x="48" y="101" font-family="ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace" font-size="17" fill="#1F1F24" font-weight="500">terrain detection</text>
+<text x="250" y="101" font-family="Iowan Old Style, Palatino, Georgia, Times New Roman, serif" font-size="12.5" fill="#63636D" font-style="italic">the same two questions, every time</text>
+<rect x="736" y="87" width="96" height="20" fill="none" stroke="#C9A84C" stroke-width="1" rx="3" stroke-opacity="0.6"/>
+<text x="784" y="101" font-family="ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace" font-size="10.5" fill="#8A6A1E" text-anchor="middle">no flags</text>
+<line x1="28" y1="112" x2="852" y2="112" stroke="#C9A84C" stroke-width="1" stroke-opacity="0.3"/>
+<rect x="29" y="112" width="822" height="304" fill="#FAF5E9"/>
+<rect x="48.0" y="132" width="250.66666666666666" height="262" fill="#FFFDF7" stroke="#C9A84C" stroke-width="1" stroke-opacity="0.75"/>
+<text x="173.33333333333331" y="160" font-family="Iowan Old Style, Palatino, Georgia, Times New Roman, serif" font-size="11" fill="#8A6A1E" font-weight="600" text-anchor="middle" letter-spacing="1.8">WORKSPACE</text>
+<line x1="68.0" y1="172" x2="278.66666666666663" y2="172" stroke="#C9A84C" stroke-width="1" stroke-opacity="0.25"/>
+<path d="M 74.0 200 L 112.0 200 L 119.0 190 L 272.66666666666663 190 L 272.66666666666663 286 L 74.0 286 Z" fill="none" stroke="#C9A84C" stroke-width="1" stroke-dasharray="4 3"/>
+<rect x="210.66666666666663" y="206" width="52" height="16" fill="none" stroke="#C9A84C" stroke-width="1" rx="3" stroke-opacity="0.7"/>
+<text x="236.66666666666663" y="218" font-family="ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace" font-size="8.5" fill="#8A6A1E" text-anchor="middle">no .git</text>
+<path d="M 88.0 244 L 114.97333333333333 244 L 121.97333333333333 234 L 167.33333333333331 234 L 167.33333333333331 274 L 88.0 274 Z" fill="#F4F4F6" stroke="#C3C3CC" stroke-width="1"/>
+<text x="98.0" y="260" font-family="ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace" font-size="8.5" fill="#63636D">.git</text>
+<path d="M 173.33333333333331 244 L 200.30666666666664 244 L 207.30666666666664 234 L 252.66666666666663 234 L 252.66666666666663 274 L 173.33333333333331 274 Z" fill="#F4F4F6" stroke="#C3C3CC" stroke-width="1"/>
+<text x="183.33333333333331" y="260" font-family="ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace" font-size="8.5" fill="#63636D">.git</text>
+<line x1="68.0" y1="304" x2="278.66666666666663" y2="304" stroke="#C9A84C" stroke-width="1" stroke-opacity="0.2"/>
+<text x="70.0" y="326" font-family="Iowan Old Style, Palatino, Georgia, Times New Roman, serif" font-size="8.5" fill="#6E6350" font-weight="600" letter-spacing="1.4">THE MARK</text>
+<text x="70.0" y="344" font-family="Iowan Old Style, Palatino, Georgia, Times New Roman, serif" font-size="10" fill="#2A241A" font-style="italic">no .git here, but the children have one</text>
+<text x="70.0" y="368" font-family="ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace" font-size="10.5" fill="#6E6350">root INDEX.md, then a full package</text>
+<text x="70.0" y="384" font-family="ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace" font-size="10.5" fill="#6E6350">per repo, only when you ask</text>
+<rect x="314.66666666666663" y="132" width="250.66666666666666" height="262" fill="#FFFDF7" stroke="#C9A84C" stroke-width="1" stroke-opacity="0.75"/>
+<text x="439.99999999999994" y="160" font-family="Iowan Old Style, Palatino, Georgia, Times New Roman, serif" font-size="11" fill="#8A6A1E" font-weight="600" text-anchor="middle" letter-spacing="1.8">TEAM REPO</text>
+<line x1="334.66666666666663" y1="172" x2="545.3333333333333" y2="172" stroke="#C9A84C" stroke-width="1" stroke-opacity="0.25"/>
+<path d="M 340.66666666666663 200 L 378.66666666666663 200 L 385.66666666666663 190 L 539.3333333333333 190 L 539.3333333333333 286 L 340.66666666666663 286 Z" fill="#F4F4F6" stroke="#C3C3CC" stroke-width="1"/>
+<rect x="487.33333333333326" y="206" width="42" height="16" fill="#EDEDF1" stroke="#C3C3CC" stroke-width="1" rx="3"/>
+<text x="508.33333333333326" y="218" font-family="ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace" font-size="8.5" fill="#63636D" text-anchor="middle">.git</text>
+<rect x="354.66666666666663" y="236" width="170.66666666666666" height="36" fill="none" stroke="#C9A84C" stroke-width="1" rx="2" stroke-opacity="0.8"/>
+<text x="366.66666666666663" y="252" font-family="ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace" font-size="9.5" fill="#8A6A1E">.claude/</text>
+<text x="366.66666666666663" y="266" font-family="Iowan Old Style, Palatino, Georgia, Times New Roman, serif" font-size="8.5" fill="#6E6350" font-style="italic">tracked by them</text>
+<line x1="334.66666666666663" y1="304" x2="545.3333333333333" y2="304" stroke="#C9A84C" stroke-width="1" stroke-opacity="0.2"/>
+<text x="336.66666666666663" y="326" font-family="Iowan Old Style, Palatino, Georgia, Times New Roman, serif" font-size="8.5" fill="#6E6350" font-weight="600" letter-spacing="1.4">THE MARK</text>
+<text x="336.66666666666663" y="344" font-family="Iowan Old Style, Palatino, Georgia, Times New Roman, serif" font-size="10" fill="#2A241A" font-style="italic">the repo commits its own .claude/</text>
+<text x="336.66666666666663" y="368" font-family="ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace" font-size="10.5" fill="#6E6350">every artifact becomes *.local.md,</text>
+<text x="336.66666666666663" y="384" font-family="ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace" font-size="10.5" fill="#6E6350">excluded through .git/info/exclude</text>
+<rect x="581.3333333333333" y="132" width="250.66666666666666" height="262" fill="#FFFDF7" stroke="#C9A84C" stroke-width="1" stroke-opacity="0.75"/>
+<text x="706.6666666666666" y="160" font-family="Iowan Old Style, Palatino, Georgia, Times New Roman, serif" font-size="11" fill="#8A6A1E" font-weight="600" text-anchor="middle" letter-spacing="1.8">CLASSIC</text>
+<line x1="601.3333333333333" y1="172" x2="811.9999999999999" y2="172" stroke="#C9A84C" stroke-width="1" stroke-opacity="0.25"/>
+<path d="M 607.3333333333333 200 L 645.3333333333333 200 L 652.3333333333333 190 L 805.9999999999999 190 L 805.9999999999999 286 L 607.3333333333333 286 Z" fill="#F4F4F6" stroke="#C3C3CC" stroke-width="1"/>
+<rect x="753.9999999999999" y="206" width="42" height="16" fill="#EDEDF1" stroke="#C3C3CC" stroke-width="1" rx="3"/>
+<text x="774.9999999999999" y="218" font-family="ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace" font-size="8.5" fill="#63636D" text-anchor="middle">.git</text>
+<rect x="621.3333333333333" y="236" width="170.66666666666666" height="36" fill="none" stroke="#C3C3CC" stroke-width="1" rx="2" stroke-dasharray="3 3"/>
+<text x="633.3333333333333" y="252" font-family="ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace" font-size="9.5" fill="#63636D">.claude/</text>
+<text x="633.3333333333333" y="266" font-family="Iowan Old Style, Palatino, Georgia, Times New Roman, serif" font-size="8.5" fill="#63636D" font-style="italic">yours, untracked</text>
+<line x1="601.3333333333333" y1="304" x2="811.9999999999999" y2="304" stroke="#C9A84C" stroke-width="1" stroke-opacity="0.2"/>
+<text x="603.3333333333333" y="326" font-family="Iowan Old Style, Palatino, Georgia, Times New Roman, serif" font-size="8.5" fill="#6E6350" font-weight="600" letter-spacing="1.4">THE MARK</text>
+<text x="603.3333333333333" y="344" font-family="Iowan Old Style, Palatino, Georgia, Times New Roman, serif" font-size="10" fill="#2A241A" font-style="italic">a repo, and the tooling is yours</text>
+<text x="603.3333333333333" y="368" font-family="ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace" font-size="10.5" fill="#6E6350">artifacts are committed normally</text>
+<text x="603.3333333333333" y="384" font-family="ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace" font-size="10.5" fill="#6E6350">and become the project's memory</text>
+</svg>

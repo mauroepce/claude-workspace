@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 412" width="880" height="412" role="img" aria-labelledby="se-title se-desc">
+<title id="se-title">One session, bracketed by two hooks</title>
+<desc id="se-desc">A session is transient and the files are not. When the session opens, a SessionStart hook reads the todos file and pushes the focused task and its next milestone into context before your first word. You work from files rather than from memory. When the session ends, a Stop hook names what is still open: uncommitted changes and in-progress specs. The files persist between sessions.</desc>
+<rect x="0" y="0" width="880" height="412" fill="#FDFCFA"/>
+<text x="48" y="34" font-family="ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace" font-size="15"><tspan fill="#8A6A1E">$</tspan><tspan fill="#1F1F24" dx="9">claude</tspan></text>
+<text x="150" y="34" font-family="Iowan Old Style, Palatino, Georgia, Times New Roman, serif" font-size="13" fill="#7A6428" font-style="italic">you come back a week later and ask where you were</text>
+<text x="832" y="34" font-family="ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace" font-size="10.5" fill="#5E5E68" text-anchor="end">the session is transient  ·  the files are not</text>
+<rect x="28" y="76" width="824" height="304" fill="none" stroke="#C9A84C" stroke-width="1.25" stroke-opacity="0.65"/>
+<text x="48" y="101" font-family="ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace" font-size="17" fill="#1F1F24" font-weight="500">one session, bracketed</text>
+<text x="296" y="101" font-family="Iowan Old Style, Palatino, Georgia, Times New Roman, serif" font-size="12.5" fill="#63636D" font-style="italic">a hook at each end, and files underneath</text>
+<line x1="28" y1="112" x2="852" y2="112" stroke="#C9A84C" stroke-width="1" stroke-opacity="0.3"/>
+<rect x="48.0" y="132" width="250.66666666666666" height="92" fill="none" stroke="#C3C3CC" stroke-width="1" stroke-dasharray="5 4"/>
+<text x="66.0" y="158" font-family="Iowan Old Style, Palatino, Georgia, Times New Roman, serif" font-size="9.5" fill="#5E5E68" font-weight="600" letter-spacing="1.5">THE SESSION OPENS</text>
+<text x="66.0" y="180" font-family="ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace" font-size="11.5" fill="#2C2C33">SessionStart hook</text>
+<text x="66.0" y="198" font-family="Iowan Old Style, Palatino, Georgia, Times New Roman, serif" font-size="10.5" fill="#63636D" font-style="italic">reads the todos file before</text>
+<text x="66.0" y="212" font-family="Iowan Old Style, Palatino, Georgia, Times New Roman, serif" font-size="10.5" fill="#63636D" font-style="italic">your first word</text>
+<rect x="314.66666666666663" y="132" width="250.66666666666666" height="92" fill="none" stroke="#C3C3CC" stroke-width="1" stroke-dasharray="5 4"/>
+<text x="332.66666666666663" y="158" font-family="Iowan Old Style, Palatino, Georgia, Times New Roman, serif" font-size="9.5" fill="#5E5E68" font-weight="600" letter-spacing="1.5">YOU WORK</text>
+<text x="332.66666666666663" y="180" font-family="ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace" font-size="11.5" fill="#2C2C33">from files, not memory</text>
+<text x="332.66666666666663" y="198" font-family="Iowan Old Style, Palatino, Georgia, Times New Roman, serif" font-size="10.5" fill="#63636D" font-style="italic">the focused task and its next</text>
+<text x="332.66666666666663" y="212" font-family="Iowan Old Style, Palatino, Georgia, Times New Roman, serif" font-size="10.5" fill="#63636D" font-style="italic">milestone are already in context</text>
+<rect x="581.3333333333333" y="132" width="250.66666666666666" height="92" fill="none" stroke="#C3C3CC" stroke-width="1" stroke-dasharray="5 4"/>
+<text x="599.3333333333333" y="158" font-family="Iowan Old Style, Palatino, Georgia, Times New Roman, serif" font-size="9.5" fill="#5E5E68" font-weight="600" letter-spacing="1.5">THE SESSION ENDS</text>
+<text x="599.3333333333333" y="180" font-family="ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace" font-size="11.5" fill="#2C2C33">Stop hook</text>
+<text x="599.3333333333333" y="198" font-family="Iowan Old Style, Palatino, Georgia, Times New Roman, serif" font-size="10.5" fill="#63636D" font-style="italic">names what is still open</text>
+<text x="599.3333333333333" y="212" font-family="Iowan Old Style, Palatino, Georgia, Times New Roman, serif" font-size="10.5" fill="#63636D" font-style="italic">before you walk away</text>
+<rect x="29" y="286" width="822" height="74" fill="#FAF5E9"/>
+<line x1="28" y1="286" x2="852" y2="286" stroke="#C9A84C" stroke-width="1" stroke-opacity="0.22"/>
+<text x="48" y="312" font-family="Iowan Old Style, Palatino, Georgia, Times New Roman, serif" font-size="11" fill="#8A6A1E" font-weight="600" letter-spacing="1.7">WHAT PERSISTS</text>
+<text x="176" y="312" font-family="Iowan Old Style, Palatino, Georgia, Times New Roman, serif" font-size="12" fill="#6E6350" font-style="italic">written to disk, read back by the next session</text>
+<rect x="48" y="326" width="173.2" height="22" fill="#FFFDF7" stroke="#C9A84C" stroke-width="1" rx="3" stroke-opacity="0.75"/>
+<text x="134.6" y="341" font-family="ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace" font-size="10.5" fill="#2A241A" text-anchor="middle">.claude/todos.md</text>
+<rect x="235.2" y="326" width="154.79999999999998" height="22" fill="#FFFDF7" stroke="#C9A84C" stroke-width="1" rx="3" stroke-opacity="0.75"/>
+<text x="312.59999999999997" y="341" font-family="ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace" font-size="10.5" fill="#2A241A" text-anchor="middle">.claude/specs/</text>
+<rect x="404.0" y="326" width="136.39999999999998" height="22" fill="#FFFDF7" stroke="#C9A84C" stroke-width="1" rx="3" stroke-opacity="0.75"/>
+<text x="472.2" y="341" font-family="ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace" font-size="10.5" fill="#2A241A" text-anchor="middle">DECISIONS.md</text>
+<line x1="88.0" y1="278" x2="88.0" y2="240" stroke="#C9A84C" stroke-width="1.4" stroke-opacity="0.9"/>
+<path d="M 82.5 240 L 88.0 229 L 93.5 240 Z" fill="#C9A84C"/>
+<text x="100.0" y="256" font-family="Iowan Old Style, Palatino, Georgia, Times New Roman, serif" font-size="10.5" fill="#7A6428" font-style="italic">read up at open</text>
+<line x1="791.9999999999999" y1="229" x2="791.9999999999999" y2="270" stroke="#C9A84C" stroke-width="1.4" stroke-opacity="0.9"/>
+<path d="M 786.4999999999999 270 L 791.9999999999999 281 L 797.4999999999999 270 Z" fill="#C9A84C"/>
+<text x="779.9999999999999" y="256" font-family="Iowan Old Style, Palatino, Georgia, Times New Roman, serif" font-size="10.5" fill="#7A6428" font-style="italic" text-anchor="end">written down at close</text>
+</svg>
