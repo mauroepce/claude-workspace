@@ -1,0 +1,31 @@
+name: Feature idea
+description: Propose a change or addition (discussion happens here, before any PR)
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Heads up: this is a personal, deliberately small toolkit. Ideas are welcome, but most
+        additions get declined to keep it small — the best proposals solve a problem the
+        existing skills already almost solve. See CONTRIBUTING.md.
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What situation does the toolkit currently handle badly or not at all?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Your proposed change
+      description: Skill, script, hook, doc — whatever shape you imagine.
+    validations:
+      required: true
+  - type: textarea
+    id: fit
+    attributes:
+      label: Why it fits this toolkit
+      description: How it aligns with the philosophy in docs/FRAMEWORK.md (spec-first, deterministic gates, persistent state, minimal surface).
+    validations:
+      required: false

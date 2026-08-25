@@ -1,0 +1,46 @@
+name: Bug report
+description: A skill, script, or hook is misbehaving
+labels: [bug]
+body:
+  - type: dropdown
+    id: install-method
+    attributes:
+      label: How did you install?
+      options:
+        - Plugin (/plugin install claude-workspace@mauroepce)
+        - Curl installer (install-personal.sh)
+        - Manual copy
+    validations:
+      required: true
+  - type: input
+    id: claude-code-version
+    attributes:
+      label: Claude Code version
+      description: Output of `claude --version`
+      placeholder: "2.1.204"
+    validations:
+      required: true
+  - type: input
+    id: component
+    attributes:
+      label: Which skill / script / hook?
+      placeholder: "/work, bin/install-personal.sh, hooks/commit-gate.sh, ..."
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What you did, what you expected, what happened instead. Paste exact output when possible.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open Claude Code in ...
+        2. Invoke ...
+        3. ...
+    validations:
+      required: false
