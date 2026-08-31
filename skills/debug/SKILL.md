@@ -129,9 +129,32 @@ If a regression test isn't feasible (e.g., the bug is in infrastructure config),
 
 The fix prevents this instance; the archive prevents the class. Offer:
 
-> "Want me to archive this in `docs/mistakes/`? One file: symptom, root cause, prevention checklist. Takes 30 seconds and future sessions (and future you) can check it before repeating the pattern."
+> "Want me to archive this in `.claude/lessons/`? One file: symptom, root cause, prevention checklist. Takes 30 seconds and future sessions (and future you) can check it before repeating the pattern."
 
-If yes, write `docs/mistakes/<YYYY-MM-DD>-<kebab-slug>.md`:
+**Where it goes — the default never leaves `.claude/`.** Before writing, check whether the tooling here belongs to someone else:
+
+```bash
+git ls-files .claude CLAUDE.md 2>/dev/null | head -3
+```
+
+- **Tracked results (a team repo).** Your notes are personal, not team deliverables. Write `.claude/lessons/mistakes/<YYYY-MM-DD>-<kebab-slug>.local.md` and keep it out of their `git status`:
+
+  ```bash
+  grep -qF '.claude/**/*.local.md' .git/info/exclude 2>/dev/null || \
+    printf '# personal claude-workspace artifacts\n.claude/**/*.local.md\n' >> .git/info/exclude
+  ```
+
+  (Same line `/onboard` writes, and the `grep` guard makes running both harmless.)
+
+  Never write outside `.claude/` in this case, and never offer to. A lesson file landing in the team's diff is exactly the leak this rule exists to prevent.
+
+- **Nothing tracked (a repo you own).** Write `.claude/lessons/mistakes/<YYYY-MM-DD>-<kebab-slug>.md`, then offer the visible copy, once:
+
+  > "Also drop a copy in `docs/mistakes/` so the team finds it without knowing about `.claude/`?"
+
+  Only on an explicit yes. Default is no.
+
+The file, either way:
 
 ```markdown
 # <one-line symptom>
@@ -148,7 +171,7 @@ Date: <date> · Found in: <file/module>
 - [ ] <second check if applicable>
 ```
 
-Before writing, glance at existing `docs/mistakes/` entries. If this is the **second-plus occurrence of the same class of bug**, say so and suggest promoting it: either a rule in the project's conventions file or a `docs/patterns/<slug>.md` describing the correct approach — recurring mistakes are conventions waiting to be written.
+Before writing, glance at existing entries in `.claude/lessons/mistakes/`. If this is the **second-plus occurrence of the same class of bug**, say so and suggest promoting it: either a rule in the project's conventions file or a `.claude/lessons/patterns/<slug>.md` describing the correct approach — recurring mistakes are conventions waiting to be written. Patterns follow the same placement rule as mistakes.
 
 If the user declines, drop it without insisting.
 

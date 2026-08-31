@@ -32,7 +32,10 @@ git ls-files .claude CLAUDE.md 2>/dev/null | head -5
 Then for this entire run: use the `.local.md` variant of every output (`conventions.local.md`, `architecture-map.local.md`, `journeys-diagram.local.md`, `onboarding.local.md`) and offer to exclude them locally:
 
 ```bash
-printf '# personal claude-workspace artifacts\n.claude/*.local.md\n' >> .git/info/exclude
+# `**/` matches zero or more directories, so this one line covers both
+# .claude/conventions.local.md and .claude/lessons/mistakes/*.local.md.
+grep -qF '.claude/**/*.local.md' .git/info/exclude 2>/dev/null || \
+  printf '# personal claude-workspace artifacts\n.claude/**/*.local.md\n' >> .git/info/exclude
 ```
 
 Why `.git/info/exclude` and not `.gitignore`: `.gitignore` is a committed, shared file — editing it puts YOUR tooling in THEIR diff, which is exactly what this mode avoids. `.git/info/exclude` behaves identically but never leaves your machine.

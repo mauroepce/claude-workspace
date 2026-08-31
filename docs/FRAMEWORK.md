@@ -141,7 +141,7 @@ When a bug appears, the temptation is to paste the error and ask for a fix. That
 6. **Scope decision** — in-scope for current `/work` task, or separate? Resist scope drift.
 7. **Minimal fix** — smallest change that addresses the root cause.
 8. **Regression test** — a test that would have caught this.
-9. **Archive the lesson** (optional) — offer to file the bug in `docs/mistakes/` with root cause + prevention checklist. On the second occurrence of the same class, promote it to a convention or a `docs/patterns/` entry — recurring mistakes are conventions waiting to be written.
+9. **Archive the lesson** (optional) — offer to file the bug in `.claude/lessons/mistakes/` with root cause + prevention checklist. On the second occurrence of the same class, promote it to a convention or a `.claude/lessons/patterns/` entry — recurring mistakes are conventions waiting to be written. Placement follows one rule: **the default never leaves `.claude/`**. In a team repo the entry is written as `*.local.md` and excluded from their `git status`; in a repo you own, the skill offers a visible `docs/mistakes/` copy for teammates, only on an explicit yes.
 10. **Hand off** to `/safe-commit` (in-scope) or new task (separate).
 
 The win: stops the "paste error → first fix → next error" loop. Your hypothesis matching the diagnosis is the calibration signal — if you were wildly wrong, the bug points to a deeper misunderstanding worth investigating. The archive step means the fix prevents this instance while the record prevents the class.
@@ -479,6 +479,36 @@ cd <team-repo>
 ```
 
 If the team independently defines `/work` or `/safe-commit`, the project-level version wins. Conflict-free.
+
+## Where the artifacts land
+
+One rule governs every file a skill writes into someone's repository:
+
+> **The default never leaves `.claude/`. It leaves only when the repo is yours and you say so.**
+
+`.claude/` is the right home because the platform already established it: it is hidden, it sorts out of the way, and every Claude Code user already ignores it. A parallel folder at the repo root would be *more* visible, not less, and would split one concept across two places.
+
+```
+.claude/
+├── conventions.md          how the code looks          /conventions
+├── architecture-map.md     what the parts are          /architecture
+├── journeys-diagram.md     what the code does          /journeys
+├── onboarding.md           where to start reading      /onboard
+├── todos.md                cross-session tasks         /todo
+├── decisions-log.md        choices and their why       /decision
+├── specs/<slug>.md         the spec under way          /work, /issue
+├── lessons/
+│   ├── mistakes/           postmortems + prevention    /debug
+│   └── patterns/           the promoted ones           /debug
+└── review-passed           diff-hash receipt           /code-review, the gate
+```
+
+Two consequences that are easy to get wrong:
+
+- **In a team repo, every one of these becomes its `*.local.md` variant** and is excluded through `.git/info/exclude` (never `.gitignore`, which is a shared file). One pattern covers the whole tree, nested files included: `.claude/**/*.local.md`. Your teammates never see that any of this exists.
+- **Only `/debug` may offer to write outside**, and only in a repo you own, and only on an explicit yes: a visible `docs/mistakes/` copy, for the case where you want a teammate to find the postmortem without knowing `.claude/` exists.
+
+This rule is written down because breaking it is silent. A skill that writes a file to the repo root in someone else's project does not fail — it just shows up in their `git status`, and you find out in code review.
 
 ## How to extend this
 
