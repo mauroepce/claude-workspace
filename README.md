@@ -137,7 +137,7 @@ org-workspace/                 no .git · open Claude Code HERE
 
 </details>
 
-`/onboard` detects this shape automatically (no root `.git`, 2+ child git repos) and builds the `INDEX.md`; `/todo` keeps one focus list across repos; the session-start hook pushes the focused task into context the moment you open the session. The child repos stay untouched — no submodules, no workspace build, nothing to explain to your team. The layer exists for memory, not for tooling: it's what makes "where was I with this client?" a question the session answers instead of asks.
+`/onboard` detects this shape automatically (no root `.git`, 2+ child git repos) and builds the `INDEX.md`; `/todo` keeps one focus list across repos; the session-start hook pushes the focused task into context the moment you open the session. Each repo also declares the names it answers to in `.claude/handles.md`, and the INDEX derives the edges between them with one batched grep — so a cross-repo task opens the two or three repos it needs instead of all twelve. The child repos stay untouched — no submodules, no workspace build, nothing to explain to your team. The layer exists for memory, not for tooling: it's what makes "where was I with this client?" a question the session answers instead of asks.
 
 Works for an organization's repo fleet, a service + front product pair, or any multi-item pipeline you steer with an agent. Full write-up in [`docs/FRAMEWORK.md`](./docs/FRAMEWORK.md#the-workspace-layer-state-one-level-above-the-repos).
 

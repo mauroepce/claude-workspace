@@ -108,7 +108,7 @@ This is the meta-command. The three sub-commands stay atomic and invokable indep
 Two detection modes (Phase 0) handle the non-trivial terrains:
 
 - **Team repos** — if the repo commits `.claude/` content or a CLAUDE.md, the onboarding artifacts are personal notes in someone else's house: every output switches to its `*.local.md` variant and the skill offers `.git/info/exclude` (never `.gitignore`, which is a shared file) so nothing personal appears in the team's `git status`.
-- **Workspace folders** — a parent directory whose children are git repos (client workspaces, multi-repo products) gets a cheap root `INDEX.md` (repo | what it is | stack | last activity | onboarding link) plus full per-repo packages on demand, instead of one muddled cross-stack report.
+- **Workspace folders** — a parent directory whose children are git repos (client workspaces, multi-repo products) gets a cheap root `INDEX.md` plus full per-repo packages on demand, instead of one muddled cross-stack report. The INDEX also carries a **derived routing layer** (see below), so a cross-repo task can name the two or three repos it needs instead of loading all of them.
 
 On the first onboard of a repo it also asks one setup question — should commits here carry the `Co-Authored-By: Claude` trailer? — and records the answer in the conventions file, where `/safe-commit` reads it. Asked once, skipped when the repo's CLAUDE.md already states a rule.
 
@@ -283,6 +283,33 @@ The skills already cooperate at this layer without configuration:
 - Per-repo state stays in each repo, where its git history belongs.
 
 Why this is neither a monorepo nor a meta-repo: there is no tooling coupling. No submodules, no workspace-level build, no lockfile — the child repos are untouched and unaware the layer exists. The workspace exists for **memory, not for builds**: it is the place the agent (and you, three weeks later) reads first. Which is also why adoption costs nothing: `mkdir`, drop the repos in, run `/onboard` once, open Claude Code at the root.
+
+### Routing: which repos does this task actually need?
+
+Seeing every repo is what the layer buys you. It is also what makes it expensive: on a real 12-repo workspace, the entire hand-written knowledge layer is 88 KB (~2% of a 1M context) while **one** repo's source is 230 MB. Loading repos was never viable at any context size. Only an index scales, and its job is to let the agent avoid reading code.
+
+The mechanism rests on one measured asymmetry: **you can grep for what a repo calls, but not for what it is called.** Grepping a real workspace for the directory name `tg-oss` finds 6 files; grepping for the name it publishes under, `@teselagen/ui`, finds 1011. Same dependency, 168x apart. An agent left to guess greps the directory name and concludes there is no edge.
+
+So each repo declares only the names it answers to, in `<repo>/.claude/handles.md`:
+
+```
+repo: tg-oss
+aka: ove | open vector editor
+
+serves:
+- @teselagen/ove   :: packages/ove/
+- @teselagen/ui    :: packages/ui/
+
+scanned: 2026-09-01
+```
+
+Edges are never authored — they are **derived** by one batched grep per repo (8 seconds across four repos, one of them 230 MB) and written into the INDEX together with their inversion. That inversion matters: in the hand-written catalog this pattern replaced, the most-connected repo recorded zero of its inbound edges while seven other entries declared edges into it. When both ends may write an edge, both ends are wrong.
+
+Two rules were paid for in false positives. A handle must be at least 4 characters and contain one of `@ / _ - .`, because the bare handle `j5` matched 139,790 times in a single repo. And `*.json` stays out of the scan: in that same repo 15,383 JSON data files contained the string while only 525 source files did.
+
+The section that earns the feature is **Unmatched** — names a repo reaches for that no handle claims. On a real workspace it surfaced a live five-endpoint dependency (`lims` calling `tg-wallet` through `WALLET_API_URL`) that the team's own 29 KB hand-maintained service catalog had been missing for four months.
+
+And the honest limit, kept in the INDEX as **Known blind spots**: on that same workspace, three of eleven documented dependencies had 0, 0 and 1 static traces because they are dispatched through a registry. This method cannot see them, and a gap must never be read as an absence.
 
 Daily shapes this serves:
 
