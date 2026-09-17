@@ -30,7 +30,16 @@ Note for `zsh` users: an unmatched glob aborts the command instead of returning 
 
 **Case A — no `.git` in THIS directory but 2+ child directories are git repos** → this is a workspace folder, not a codebase. Jump to "Workspace mode" below. Do NOT stop with "not a git repo".
 
-A workspace can live *inside* a repo — a parent repo that holds docs and skills, with the actual projects cloned into `repos/`. Case A still applies to that inner folder: run workspace mode there, and treat the outer repo as one more repo, not as the workspace.
+A workspace often lives *inside* a repo — a parent repo holding docs and skills, with the projects cloned into `repos/`. Nothing routes you there automatically, so look:
+
+```bash
+for c in */; do
+  n=$(ls -d "$c"*/.git 2>/dev/null | wc -l)
+  [ "$n" -ge 2 ] && echo "workspace candidate: $c ($n repos)"
+done
+```
+
+If that names a folder, say so and run workspace mode **there**, not here. The outer repo is then a sibling of the workspace, not a member of it: the join only walks the workspace's direct children, so an outer repo stays outside the graph. Tell the user that explicitly rather than letting them assume it was scanned.
 
 **Case B — tracked `.claude/` files or a CLAUDE.md exist** → this repo belongs to a team, and your onboarding artifacts are personal notes, not team deliverables. Announce it:
 
@@ -200,17 +209,23 @@ grep -qF '.claude/**/*.local.md' .git/info/exclude 2>/dev/null || \
 Format — two header keys, one block, one date, no nesting:
 
 ```
-repo: tg-oss
-aka: ove | open vector editor
+repo: tg-copilot
+aka: langgraph | qdrant | copilot
 
 serves:
-- @teselagen/ove   :: packages/ove/
-- @teselagen/ui    :: packages/ui/
+- @teselagen/tg-tool-client :: client/typescript/
+- COPILOTKIT_URL            :: src/copilotkit_runtime_api/
 
 scanned: <date>
 ```
 
-Read `serves` as: *these are the strings another repo would contain if it talked to me, and here is what implements each one.*
+**The two lines do different jobs, and confusing them is the main way this goes wrong.**
+
+`aka:` is **vocabulary**. Bare product and service names — `langgraph`, `qdrant`, `piston`, `lims` — that let a reader map a task phrase ("the langgraph service is timing out") onto a repo. They feed the INDEX's "Names" section. They are **not** used to derive edges.
+
+`serves:` is **addresses**. Qualified strings another repo would literally contain if it talked to this one: package names, env vars naming this service, deployable names. Read it as *these are the strings another repo would contain if it talked to me, and here is what implements each one.* Only these feed the join.
+
+Why the split, measured: a run that put bare names in `serves:` produced fourteen new edge rows and **not one new true dependency**. Six were backed by code, six were real pairs whose only evidence was prose, one recorded where code had been copied from, and one was an outright false pair pointing the wrong way — a comment in a gateway repo describing its *consumer* became an edge *to* that consumer. One bare name alone supplied 73% and 81% of the hits on two pairs it did not discover. Word boundaries fix substring noise; they cannot tell a call from a sentence, and prose is where product names live.
 
 **Where handles come from**, in descending order of reliability:
 
@@ -220,13 +235,18 @@ Read `serves` as: *these are the strings another repo would contain if it talked
 
 For the `:: path` on an env-var handle, point at the directory that answers the requests (`server/`, `gateway/`), not at a file that merely mentions the name. If you cannot tell, write `::` with the repo root and say so in the INDEX.
 
-**Which strings are usable as handles:**
+**Which strings belong in `serves:`:**
 
-- At least 3 characters.
-- **Never** a generic name that half the ecosystem uses. Blocklist, non-negotiable: `API_URL`, `BASE_URL`, `HOST_URL`, `DATABASE_URL`, `DB_HOST`, `REDIS_URL`, `PORT`, `GATEWAY_URL`, `BACKEND_URL`, `FRONTEND_URL`, `SERVICE_URL`, `WEBHOOK_URL`, and anything equally unqualified. Measured: five of these alone carried 693 hits across one workspace and would have fabricated an edge between nearly every pair of repos.
-- A short bare name like `piston` or `qdrant` **is** allowed, because the join matches on word boundaries (below). Before boundary matching it was not: the bare handle `j5` matched 139,790 times, and the rule that banned it also banned legitimate Kubernetes service names.
+- At least 3 characters, and **qualified** — it carries a scope, a separator, or a casing that marks it as an address rather than a word: `@scope/name`, `SOME_SERVICE_URL`, `my-service-internal-lb`. A bare lowercase product name belongs in `aka:`.
+- **Never** a generic name that half the ecosystem uses. Blocklist, enforced by the join: `API_URL`, `BASE_URL`, `HOST_URL`, `DATABASE_URL`, `DB_HOST`, `REDIS_URL`, `PORT`, `GATEWAY_URL`, `BACKEND_URL`, `FRONTEND_URL`, `SERVICE_URL`, `WEBHOOK_URL`, `API_BASE_URL`, `CLIENT_URL`, `PUBLIC_URL`. Measured: five of these alone carried 693 hits across one workspace and would have connected nearly every pair of repos.
+- **Hostnames deserve their own entry.** Word boundaries treat `-` as part of the word, so a handle `tg-gateway` no longer matches `tg-gateway-dev.example.net` — and that hostname is often how peers actually reach the service. If a repo publishes one, list it: twelve real references went uncounted in one run because nobody did.
 
-If a repo has no distinctive name, leave `serves:` empty and say so. An empty block is honest; an invented handle is not.
+Two source rules that look right and are not:
+
+- *"Only count a name if this repo builds it"* wrongly excludes a Deployment this repo owns that runs an upstream image (`qdrant`, `redis`, `postgres`). The test is **who owns the manifest**, not who built the binary. Do exclude a name whose image is built elsewhere and merely referenced here.
+- *"Skip anything private"* wrongly excludes a private root package whose name is the product itself. Skip private **sub**packages and vendored code; keep the name the repo is known by — in `aka:`, since it will be a bare word.
+
+If a repo has no distinctive address, leave `serves:` empty and say so. An empty block is honest; an invented handle is not.
 
 ### 2. INDEX.md — the roll-up, with derived routing
 
@@ -235,8 +255,9 @@ Light scan per child repo for the table. Everything below "Repos" is **generated
 ```markdown
 # <folder name> — workspace index
 
-*Repo table by `/onboard`. Everything below "Routing" is DERIVED — regenerated <date>.
-Do not hand-edit it: fix the repo's .claude/handles.local.md and re-run the join at the bottom.*
+*Repo table by `/onboard`. Everything below "Routing" is DERIVED — regenerated <date> —
+except "Edges ruled out", which is authored. Do not hand-edit the derived sections:
+fix the repo's .claude/handles.local.md and re-run the join at the bottom.*
 
 ## Routing — read this before opening any repo
 
@@ -253,11 +274,17 @@ Do not hand-edit it: fix the repo's .claude/handles.local.md and re-run the join
 |---|---|---|---|---|
 
 ## Names
-<handles grouped by the repo that serves them, with paths>
+<every repo's `aka:` vocabulary AND its `serves:` addresses, grouped by repo,
+ with paths. This is the section a reader searches; both lines feed it.>
 
 ## Edges — derived <date>, counts are matches
 | From | To | Matched handle | Hits |
 |---|---|---|---|
+
+## Edges ruled out — AUTHORED, not derived
+<a row you verified as false, with the reason, so the next regeneration does not
+ re-present it as new. The only hand-written thing below "Routing"; label it as
+ such. If the join stops producing a row listed here, delete the row.>
 
 ## Inbound — inverted from Edges. Never authored.
 
@@ -270,32 +297,56 @@ Do not hand-edit it: fix the repo's .claude/handles.local.md and re-run the join
 <paste the exact script, so the file carries its own instructions>
 ```
 
-**The join.** Run from the workspace root, in `bash`:
+**The join.** Run from the workspace root, in `bash`. It picks its own regex engine, enforces the blocklist, and reports what it threw away:
 
 ```bash
-# Word-boundary matching is the whole difference between signal and noise.
-# git grep here has no PCRE, and \b does NOT help: a hyphen is a non-word
-# character, so `tg-app\b` still matches tg-app-dev. Capture the neighbouring
-# character instead and strip it afterwards.
-HANDLES=$(awk -F' :: ' '/^- /{sub(/^- /,"");gsub(/ +$/,"",$1);print $1}' */.claude/handles*.md \
-  | sort -u | grep -E '^.{3,}$' | sed 's/[.[\*^$]/\\&/g' | paste -sd'|' -)
+# Only the `serves:` block feeds the join. `aka:` is vocabulary, not addresses.
+BLOCK='^(API_URL|BASE_URL|HOST_URL|DATABASE_URL|DB_HOST|REDIS_URL|PORT|GATEWAY_URL|BACKEND_URL|FRONTEND_URL|SERVICE_URL|WEBHOOK_URL|API_BASE_URL|CLIENT_URL|PUBLIC_URL)$'
+ALL=$(awk -F' :: ' '/^serves:/{s=1;next} /^scanned:/{s=0} s&&/^- /{sub(/^- /,"");gsub(/ +$/,"",$1);print $1}' \
+        */.claude/handles*.md | sort -u)
+KEEP=$(printf '%s\n' "$ALL" | grep -E '^.{3,}$' | grep -vE "$BLOCK")
+DROP=$(comm -23 <(printf '%s\n' "$ALL") <(printf '%s\n' "$KEEP"))
+[ -n "$DROP" ] && { echo "== dropped (too short or blocklisted) =="; printf '%s\n' "$DROP"; echo; }
+HANDLES=$(printf '%s\n' "$KEEP" | sed 's/[.[\*^$]/\\&/g' | paste -sd'|' -)
 
-for d in */; do
+# Engine, decided once. PCRE is exact and roughly ten times faster; ERE is the
+# fallback. A lookaround pattern is what forces the PCRE path to compile, so a
+# plain probe pattern would wrongly report success. Exit 128 means no PCRE.
+FIRST=$(for d in */; do [ -d "$d/.git" ] && { echo "$d"; break; }; done)
+git -C "$FIRST" grep -qP '(?<!\x01)x' -- . >/dev/null 2>&1
+[ $? -eq 128 ] && ENGINE=ere || ENGINE=pcre
+echo "== engine: $ENGINE =="
+
+scan() {
+  if [ "$ENGINE" = pcre ]; then
+    git -C "$1" grep -hoIP "(?<![A-Za-z0-9_-])(?:$HANDLES)(?![A-Za-z0-9_-])" \
+        -- '*.ts' '*.tsx' '*.js' '*.jsx' '*.py' '*.go' '*.yaml' '*.yml' 'Dockerfile*' 2>/dev/null
+  else
+    git -C "$1" grep -hoIE "(^|[^A-Za-z0-9_-])($HANDLES)([^A-Za-z0-9_-]|\$)" \
+        -- '*.ts' '*.tsx' '*.js' '*.jsx' '*.py' '*.go' '*.yaml' '*.yml' 'Dockerfile*' 2>/dev/null \
+      | sed -E 's/^[^A-Za-z0-9_@]//; s/[^A-Za-z0-9_-]$//'
+  fi
+}
+
+RAW=$(for d in */; do
   [ -e "$d/.git" ] || continue
-  # skip worktrees: their .git is a FILE and their content duplicates the parent
   [ -d "$d/.git" ] || { echo "skipped worktree: ${d%/}" >&2; continue; }
-  git -C "$d" grep -hoIE "(^|[^A-Za-z0-9_-])($HANDLES)([^A-Za-z0-9_-]|\$)" \
-      -- '*.ts' '*.tsx' '*.js' '*.jsx' '*.py' '*.go' '*.yaml' '*.yml' 'Dockerfile*' 2>/dev/null \
-    | sed -E 's/^[^A-Za-z0-9_@]//; s/[^A-Za-z0-9_-]$//' \
-    | sort | uniq -c | sed "s|^|${d%/} |"
-done
+  scan "$d" | sort | uniq -c | sed "s|^|${d%/} |"
+done)
+printf '%s\n' "$RAW"
+
+SEEN=$(printf '%s\n' "$RAW" | awk '{print $3}' | sort -u)
+DEAD=$(comm -23 <(printf '%s\n' "$KEEP") <(printf '%s\n' "$SEEN"))
+[ -n "$DEAD" ] && { echo; echo "== zero hits anywhere (dead weight) =="; printf '%s\n' "$DEAD"; }
 ```
 
-Drop self-matches and anything under 2 hits. Expect roughly 10 seconds across six repos when the largest holds ~31,000 files.
+Drop self-matches and anything under 2 hits. **On the ERE fallback, verify a count of 1 before dropping it:** `grep -o` does not overlap, so a handle whose neighbour was consumed by the previous match loses its boundary and goes uncounted. Measured at 26 missed matches in 6,148 — under half a percent, and it changed exactly one row, but that row sat on the drop threshold. The PCRE path has no such gap because a lookaround consumes nothing.
 
-**Do not add `*.json` to that glob.** In one real repo 15,922 JSON data files carried a handle string against a few hundred source files, and including them tripled the scan time while burying the signal.
+**Do not add `*.json` to that glob.** In one real repo 15,922 JSON data files carried a handle string against a few hundred source files, tripling the scan time while burying the signal.
 
-**Report what the filter removed.** After building `$HANDLES`, print the handles that were dropped for being too short or blocklisted, and after the join print the handles with **zero** hits anywhere. Both are silent failures otherwise: a handle someone wrote by hand that never participates looks identical to a handle that has no callers. In one real run, 25 of 108 handles were dead weight and nothing said so.
+**Timing, measured on six repos with 31,000 files in the largest:** about 2 seconds on the PCRE path, about 25 on the ERE fallback. If the fallback is what you get and it becomes annoying, that is the argument for installing a `git` built with PCRE, not for narrowing the glob.
+
+**Both reports matter.** A handle dropped by the filter and a handle nobody references look identical in the output otherwise. In one real run 28 of 125 handles were dead weight and nothing said so.
 
 **Unmatched — five categories, not two.** Run the second pass to find what each repo reaches for:
 
@@ -311,6 +362,7 @@ Sort every result that matches no handle into:
 - **An external vendor.** Stripe, an IdP, a public API. Not routable, but worth listing.
 - **Own infrastructure.** Database, cache, queue, tunnel. Not a service dependency.
 - **Not a dependency at all.** Test constants, regex fragments, and prefixes the pattern truncated (`ARTIFACT_URI` cut out of `ARTIFACT_URI_SCHEME`). Say so rather than inventing an edge.
+- **Undetermined.** You looked and could not place it: no committed value, no catalog entry, read-only usage. Say that, with where you looked. A forced guess in one of the five categories above is worse than an honest sixth.
 
 **Known blind spots.** Record what this method structurally cannot see, so a gap is never read as an absence. The recurring ones: a call made on a relative path against a host held in a shared client object; dispatch through a registry or a slug; a shared URI scheme or route contract that no handle names; and every file type outside the join's glob.
 
