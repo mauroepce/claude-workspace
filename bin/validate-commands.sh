@@ -86,13 +86,16 @@ for skill_dir in "$SKILLS_DIR"/*/; do
   body_start=$((fm_close_line + 1))
 
   # Check 6: has at least one H1 header in the body (after frontmatter)
-  if ! tail -n +"$body_start" "$skill_file" | grep -q "^# "; then
+  # Process substitution, not a pipe: under `set -o pipefail`, `grep -q` exits on
+  # the first match, `tail` then dies of SIGPIPE, and the pipeline reports 141 —
+  # a false failure that only appears once a file outgrows the pipe buffer.
+  if ! grep -q "^# " <(tail -n +"$body_start" "$skill_file"); then
     echo "  ⚠ /${skill_name}: no H1 header found in body"
     warnings=$((warnings + 1))
   fi
 
   # Check 7: skill name in body matches directory name
-  if ! tail -n +"$body_start" "$skill_file" | grep -q "/${skill_name}"; then
+  if ! grep -q "/${skill_name}" <(tail -n +"$body_start" "$skill_file"); then
     echo "  ⚠ /${skill_name}: skill name '/${skill_name}' not referenced in body"
     warnings=$((warnings + 1))
   fi

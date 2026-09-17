@@ -15,15 +15,22 @@ This is the meta-command that ties `/conventions`, `/architecture`, and `/journe
 Two checks BEFORE the sanity check, because they change where everything gets written:
 
 ```bash
-# A. Workspace root? (not a repo itself, but 2+ direct children are git repos)
-# rev-parse instead of `test -d .git`: worktrees have a .git FILE, not a dir.
-git rev-parse --is-inside-work-tree >/dev/null 2>&1 && echo "is a repo" || ls -d */.git 2>/dev/null | wc -l
+# A. Workspace root? Ask about THIS directory only, then count child repos.
+# `test -e .git` not `git rev-parse`: rev-parse answers about the whole work
+# tree, so it says "is a repo" in every subdirectory of a parent repo and the
+# workspace check never fires. `-e` not `-d` because a worktree's .git is a FILE.
+test -e .git && echo "this dir is a repo" || echo "not a repo"
+ls -d */.git 2>/dev/null | wc -l          # how many direct children are repos
 
 # B. Team-owned tooling? (the repo commits .claude/ content or a CLAUDE.md)
 git ls-files .claude CLAUDE.md 2>/dev/null | head -5
 ```
 
-**Case A — no `.git` here but 2+ child directories are git repos** → this is a workspace folder, not a codebase. Jump to "Workspace mode" below. Do NOT stop with "not a git repo".
+Note for `zsh` users: an unmatched glob aborts the command instead of returning nothing. Run these in `bash`, or `setopt NULL_GLOB` first.
+
+**Case A — no `.git` in THIS directory but 2+ child directories are git repos** → this is a workspace folder, not a codebase. Jump to "Workspace mode" below. Do NOT stop with "not a git repo".
+
+A workspace can live *inside* a repo — a parent repo that holds docs and skills, with the actual projects cloned into `repos/`. Case A still applies to that inner folder: run workspace mode there, and treat the outer repo as one more repo, not as the workspace.
 
 **Case B — tracked `.claude/` files or a CLAUDE.md exist** → this repo belongs to a team, and your onboarding artifacts are personal notes, not team deliverables. Announce it:
 
@@ -181,107 +188,131 @@ The folder is not a codebase — it's a workspace: each child directory with `.g
 
 Do this before the INDEX, because the INDEX is derived from it.
 
-The problem it solves, measured on a real workspace: grepping for a repo's **directory name** `tg-oss` finds 6 files. Grepping for the name it actually publishes under, `@teselagen/ui`, finds 1011. Same real dependency, 168x apart. An agent that greps directory names concludes there is no edge. **You can grep for what a repo calls; you cannot grep for what it is called** — so the name is the one thing worth writing to disk.
+The problem it solves, measured on a real workspace: grepping for a repo's **directory name** `tg-oss` finds 6 files. Grepping for the name it publishes under, `@teselagen/ui`, finds 1011. Same dependency, 168x apart. **You can grep for what a repo calls; you cannot grep for what it is called** — so the name is the one thing worth writing to disk.
 
-Write `<repo>/.claude/handles.md` (or `handles.local.md` in a team repo — the existing `.claude/**/*.local.md` exclude already covers it, nothing new to add):
+Write `<repo>/.claude/handles.local.md` in **every** repo, team-owned or not. These are your personal routing notes, never a team deliverable, so they are always the `.local` variant. Add the exclude line in each repo — do not assume it is already there, it usually is not:
+
+```bash
+grep -qF '.claude/**/*.local.md' .git/info/exclude 2>/dev/null || \
+  printf '# personal claude-workspace artifacts\n.claude/**/*.local.md\n' >> .git/info/exclude
+```
+
+Format — two header keys, one block, one date, no nesting:
 
 ```
 repo: tg-oss
 aka: ove | open vector editor
 
 serves:
-- @teselagen/ove           :: packages/ove/
-- @teselagen/ui            :: packages/ui/
-- @teselagen/bio-parsers   :: packages/bio-parsers/
+- @teselagen/ove   :: packages/ove/
+- @teselagen/ui    :: packages/ui/
 
 scanned: <date>
 ```
 
-Read `serves` as: *these are the strings another repo would contain if it talked to me, and here is what implements each one.* Two header keys, one block, one date. No nesting, no prose — a file you can see all of is a file whose wrongness is visible.
+Read `serves` as: *these are the strings another repo would contain if it talked to me, and here is what implements each one.*
 
-**Where the handles come from**, cheapest first:
+**Where handles come from**, in descending order of reliability:
 
-```bash
-# published package names (skip private + example/demo packages)
-git ls-files '*package.json' | grep -v node_modules
-# service names in deployment manifests
-git ls-files 'docker-compose*' '*.yaml' '*.yml' | grep -iE 'compose|k8s|deploy'
-# the env var peers use to reach this repo, if it is committed anywhere
-git grep -hoE '[A-Z][A-Z0-9_]*_(URL|URI|HOST|ENDPOINT)' -- '*.env.example' '*.yaml' '*.yml'
-```
+1. **Published package names.** `git ls-files '*package.json' 'pyproject.toml'` — take the `name` field. Skip anything private, and skip vendored upstream code and example/demo packages: a repo that vendors a framework will otherwise claim that framework's name. Check `private` loosely — it appears as both `true` and `"true"` in the wild.
+2. **Deployable names in your own manifests.** `git ls-files 'docker-compose*' 'k8s/**/*.yaml' 'Dockerfile*'`. Only count a name if **this repo builds it** — a deploy repo's manifests name everyone's services, and claiming them makes that repo appear to serve half the platform.
+3. **The env var peers use to reach you.** This one is backwards by default and needs care: the `*_URL` variables inside a repo are overwhelmingly the ones it **consumes**, not the ones it answers to. `lims` contains `WALLET_API_URL` because it *calls* the wallet, not because it *is* the wallet. Only claim such a variable as a handle if you can see this repo **serving** that address — it appears in this repo's own deploy manifest as its published host, or its value points at this repo's service. When in doubt leave it out; a wrongly claimed variable invents an inbound edge that does not exist.
 
-**A handle must be at least 4 characters AND contain one of `@ / _ - .`** — verified necessary: the bare handle `j5` matched 139,790 times in one repo (15,383 of them JSON data files), which is not routing, it is noise. Bare short words are not handles; use the qualified form (`blast-ms`, not `blast`). If a repo has no distinctive name, say so and leave `serves:` empty rather than inventing one.
+For the `:: path` on an env-var handle, point at the directory that answers the requests (`server/`, `gateway/`), not at a file that merely mentions the name. If you cannot tell, write `::` with the repo root and say so in the INDEX.
+
+**Which strings are usable as handles:**
+
+- At least 3 characters.
+- **Never** a generic name that half the ecosystem uses. Blocklist, non-negotiable: `API_URL`, `BASE_URL`, `HOST_URL`, `DATABASE_URL`, `DB_HOST`, `REDIS_URL`, `PORT`, `GATEWAY_URL`, `BACKEND_URL`, `FRONTEND_URL`, `SERVICE_URL`, `WEBHOOK_URL`, and anything equally unqualified. Measured: five of these alone carried 693 hits across one workspace and would have fabricated an edge between nearly every pair of repos.
+- A short bare name like `piston` or `qdrant` **is** allowed, because the join matches on word boundaries (below). Before boundary matching it was not: the bare handle `j5` matched 139,790 times, and the rule that banned it also banned legitimate Kubernetes service names.
+
+If a repo has no distinctive name, leave `serves:` empty and say so. An empty block is honest; an invented handle is not.
 
 ### 2. INDEX.md — the roll-up, with derived routing
 
-Light scan per child repo for the table — name and description, stack hints, branch, last commit date. No deep reading. Everything below "Repos" is **generated output**, not hand-written:
+Light scan per child repo for the table. Everything below "Repos" is **generated output**:
 
 ```markdown
 # <folder name> — workspace index
 
 *Repo table by `/onboard`. Everything below "Routing" is DERIVED — regenerated <date>.
-Do not hand-edit it: fix the repo's .claude/handles.md and re-run the join below.*
+Do not hand-edit it: fix the repo's .claude/handles.local.md and re-run the join at the bottom.*
 
 ## Routing — read this before opening any repo
 
 1. Look up every proper noun in the task under "Names". That maps task vocabulary
-   ("the wallet balance", "the ICE import") onto a repo AND a path inside it.
+   onto a repo AND a path inside it.
 2. Read the "Edges" rows for the repos you hit. One hop. Stop.
 3. Open only those repos, starting at the paths "Names" gave you.
-4. A name absent from "Names" is not in this workspace. Say so; do not go looking.
-5. If the date above is old, re-run the join — it costs seconds, and a stale edge
-   is worse than no edge.
+4. A name absent from "Names" is not necessarily absent from the workspace —
+   check "Unmatched" before concluding anything.
+5. If the date above is old, re-run the join at the bottom of this file.
 
 ## Repos
-
 | Repo | What it is | Stack | Last activity | Onboarding |
 |---|---|---|---|---|
-| `<dir>/` | <one line> | <stack> | <date> on `<branch>` | [package](<dir>/.claude/onboarding.md) or — |
 
 ## Names
-<every handle, grouped by the repo that serves it, with its path>
+<handles grouped by the repo that serves them, with paths>
 
 ## Edges — derived <date>, counts are matches
 | From | To | Matched handle | Hits |
 |---|---|---|---|
 
 ## Inbound — inverted from Edges. Never authored.
-<repo <- callers>
 
-## Unmatched — references pointing outside this workspace
-<name (repo, hits) -> what it probably is: uncloned repo, or external vendor>
+## Unmatched — references no handle claims
+<by category, see below>
 
 ## Known blind spots — not detectable by this method
-<dependencies dispatched through a registry or service discovery leave no static
-trace; list the ones you know about so their absence is not read as evidence>
+
+## Join — the command that regenerates the three sections above
+<paste the exact script, so the file carries its own instructions>
 ```
 
-**The join** — one batched grep per repo, run from the workspace root:
+**The join.** Run from the workspace root, in `bash`:
 
 ```bash
+# Word-boundary matching is the whole difference between signal and noise.
+# git grep here has no PCRE, and \b does NOT help: a hyphen is a non-word
+# character, so `tg-app\b` still matches tg-app-dev. Capture the neighbouring
+# character instead and strip it afterwards.
 HANDLES=$(awk -F' :: ' '/^- /{sub(/^- /,"");gsub(/ +$/,"",$1);print $1}' */.claude/handles*.md \
-  | sort -u | grep -E '^.{4,}$' | grep -E '[@/_.-]' | sed 's/[.[\*^$]/\\&/g' | paste -sd'|' -)
+  | sort -u | grep -E '^.{3,}$' | sed 's/[.[\*^$]/\\&/g' | paste -sd'|' -)
 
 for d in */; do
-  [ -d "$d/.git" ] || continue
-  git -C "$d" grep -hoIE "$HANDLES" \
+  [ -e "$d/.git" ] || continue
+  # skip worktrees: their .git is a FILE and their content duplicates the parent
+  [ -d "$d/.git" ] || { echo "skipped worktree: ${d%/}" >&2; continue; }
+  git -C "$d" grep -hoIE "(^|[^A-Za-z0-9_-])($HANDLES)([^A-Za-z0-9_-]|\$)" \
       -- '*.ts' '*.tsx' '*.js' '*.jsx' '*.py' '*.go' '*.yaml' '*.yml' 'Dockerfile*' 2>/dev/null \
+    | sed -E 's/^[^A-Za-z0-9_@]//; s/[^A-Za-z0-9_-]$//' \
     | sort | uniq -c | sed "s|^|${d%/} |"
 done
 ```
 
-Drop self-matches (a repo hitting its own handles) and anything under 2 hits. What remains is the edge set. **Do not add `*.json` to that glob** — in one real workspace it turned a 8s scan into 34s and buried the signal under data files.
+Drop self-matches and anything under 2 hits. Expect roughly 10 seconds across six repos when the largest holds ~31,000 files.
 
-**The second pass, which is where the value shows up.** Find what each repo reaches for that no handle claims:
+**Do not add `*.json` to that glob.** In one real repo 15,922 JSON data files carried a handle string against a few hundred source files, and including them tripled the scan time while burying the signal.
+
+**Report what the filter removed.** After building `$HANDLES`, print the handles that were dropped for being too short or blocklisted, and after the join print the handles with **zero** hits anywhere. Both are silent failures otherwise: a handle someone wrote by hand that never participates looks identical to a handle that has no callers. In one real run, 25 of 108 handles were dead weight and nothing said so.
+
+**Unmatched — five categories, not two.** Run the second pass to find what each repo reaches for:
 
 ```bash
 git -C "$d" grep -hoE '[A-Z][A-Z0-9_]*_(URL|URI|HOST|ENDPOINT)' \
     -- '*.ts' '*.js' '*.py' '*.go' '*.yaml' '*.yml' 2>/dev/null | sort | uniq -c | sort -rn
 ```
 
-Anything here that matches no repo's handles is either a repo that is not cloned or an external vendor. Put it under "Unmatched" with which one you think it is. This is the section that earns the feature: on a real workspace it surfaced a live five-endpoint dependency that the team's own hand-written 29 KB service catalog had been missing for four months.
+Sort every result that matches no handle into:
 
-**Be honest about the miss rate.** On that same workspace, three of eleven hand-documented dependencies had 0, 0 and 1 static traces because they are dispatched through a registry. This method would not have found them. That is what "Known blind spots" is for: a place to record that detection failed, so a gap is never mistaken for an absence.
+- **A repo not cloned here.** The highest-value rows. Name the repo you think it is and quote the value that told you (a deploy manifest usually holds it).
+- **A repo that IS here, but no handle covers.** The category most likely to be missed, and the one that shows the method's limit: `GATEWAY_URL` inside a client file is a real edge to the gateway repo, but no handle matches because the variable name does not carry the repo's name. Read the value or the surrounding call to place it.
+- **An external vendor.** Stripe, an IdP, a public API. Not routable, but worth listing.
+- **Own infrastructure.** Database, cache, queue, tunnel. Not a service dependency.
+- **Not a dependency at all.** Test constants, regex fragments, and prefixes the pattern truncated (`ARTIFACT_URI` cut out of `ARTIFACT_URI_SCHEME`). Say so rather than inventing an edge.
+
+**Known blind spots.** Record what this method structurally cannot see, so a gap is never read as an absence. The recurring ones: a call made on a relative path against a host held in a shared client object; dispatch through a registry or a slug; a shared URI scheme or route contract that no handle names; and every file type outside the join's glob.
 
 ### 3. Full onboarding — per repo, on demand
 

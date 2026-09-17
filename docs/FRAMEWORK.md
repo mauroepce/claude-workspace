@@ -303,11 +303,21 @@ serves:
 scanned: 2026-09-01
 ```
 
-Edges are never authored — they are **derived** by one batched grep per repo (8 seconds across four repos, one of them 230 MB) and written into the INDEX together with their inversion. That inversion matters: in the hand-written catalog this pattern replaced, the most-connected repo recorded zero of its inbound edges while seven other entries declared edges into it. When both ends may write an edge, both ends are wrong.
+Edges are never authored — they are **derived** by one batched grep per repo (about 10 seconds across six repos, the largest holding 31,000 files) and written into the INDEX together with their inversion. That inversion matters: in the hand-written catalog this pattern replaced, the most-connected repo recorded zero of its inbound edges while seven other entries declared edges into it. When both ends may write an edge, both ends are wrong.
 
-Two rules were paid for in false positives. A handle must be at least 4 characters and contain one of `@ / _ - .`, because the bare handle `j5` matched 139,790 times in a single repo. And `*.json` stays out of the scan: in that same repo 15,383 JSON data files contained the string while only 525 source files did.
+Three rules were each paid for in false positives from real runs:
 
-The section that earns the feature is **Unmatched** — names a repo reaches for that no handle claims. On a real workspace it surfaced a live five-endpoint dependency (`lims` calling `tg-wallet` through `WALLET_API_URL`) that the team's own 29 KB hand-maintained service catalog had been missing for four months.
+**Match on word boundaries.** This is the difference between signal and noise, and the obvious implementation is wrong: `git grep` here has no PCRE, and `\b` does not help because a hyphen is a non-word character, so `tg-app\b` still matches `tg-app-dev`. The join captures the neighbouring character in ERE and strips it afterwards. Before that fix, a first run produced two entirely false edges (a handle `tg-gateway` matching an unrelated `tg-gateway-ingress`, and `tg-ms` matching a storage bucket named `tg-msa-dbs`) and inflated a real one threefold on GCP project names.
+
+**Blocklist the generic names.** `API_URL`, `BASE_URL`, `HOST_URL`, `DATABASE_URL` and their kin pass any structural rule and would connect nearly every pair of repos; in one workspace five of them alone carried 693 hits. They are excluded by name, not by pattern.
+
+**Keep `*.json` out of the scan.** In one repo 15,922 JSON data files carried a handle string against a few hundred source files, tripling the scan time while burying the signal.
+
+With boundaries in place a bare short name like `piston` or `qdrant` is safe again, which matters: an earlier rule that demanded a separator character rejected exactly the Kubernetes service names a peer writes into an internal URL.
+
+The section that earns the feature is **Unmatched** — names a repo reaches for that no handle claims. On a real workspace it surfaced a live dependency from two directions at once (`lims` and `tg-gateway` both reaching a wallet service) that the team's own 29 KB hand-maintained service catalog had never recorded, along with three further uncloned repos nobody had listed.
+
+Unmatched needs five categories, not the obvious two. Beyond "a repo not cloned here" and "an external vendor", the one that teaches the most is **a repo that IS here but no handle covers**: a variable named `GATEWAY_URL` is a real edge to the gateway repo, invisible to the join because the variable name does not carry the repo's name. The remaining two keep the section honest — own infrastructure (database, cache, tunnel) and things that are not dependencies at all (test constants, and prefixes the pattern truncated).
 
 And the honest limit, kept in the INDEX as **Known blind spots**: on that same workspace, three of eleven documented dependencies had 0, 0 and 1 static traces because they are dispatched through a registry. This method cannot see them, and a gap must never be read as an absence.
 
