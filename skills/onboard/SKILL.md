@@ -311,13 +311,18 @@ fix the repo's .claude/handles.local.md and re-run the join at the bottom.*
 
 ```bash
 BLOCK='^(API_URL|BASE_URL|HOST_URL|DATABASE_URL|DB_HOST|REDIS_URL|PORT|GATEWAY_URL|BACKEND_URL|FRONTEND_URL|SERVICE_URL|WEBHOOK_URL|API_BASE_URL|CLIENT_URL|PUBLIC_URL)$'
+MIN_HITS=2
+INDEX=INDEX.md
+
 REPOS=$(for d in */; do [ -d "$d/.git" ] && echo "${d%/}"; done)
 [ -z "$REPOS" ] && { echo "no git repos here" >&2; exit 1; }
 
-ALL=$(for r in $REPOS; do
-        awk -F' :: ' '/^serves:/{s=1;next} /^scanned:/{s=0} s&&/^- /{sub(/^- /,"");gsub(/ +$/,"",$1);print $1}' \
+# handle <TAB> the repo that serves it
+MAP=$(for r in $REPOS; do
+        awk -v repo="$r" -F' :: ' '/^serves:/{s=1;next} /^scanned:/{s=0} s&&/^- /{sub(/^- /,"");gsub(/ +$/,"",$1);print $1"\t"repo}' \
           "$r"/.claude/handles*.md 2>/dev/null
-      done | sort -u)
+      done)
+ALL=$(printf '%s\n' "$MAP" | cut -f1 | sort -u)
 
 SHORT=$(printf '%s\n' "$ALL" | grep -vE '^.{3,}$')
 BLOCKED=$(printf '%s\n' "$ALL" | grep -E "$BLOCK")
@@ -331,15 +336,14 @@ report "dropped: unqualified, belongs in aka:" "$BARE"
 
 # Longest first: PCRE alternation is leftmost-FIRST, so a handle that prefixes
 # another would otherwise swallow every match of the longer one.
-# Escape every ERE/PCRE metacharacter, not just a few: one unescaped '+' aborts
-# the whole scan with a regex error rather than missing quietly.
+# Escape every metacharacter: one unescaped '+' aborts the scan with an error.
 HANDLES=$(printf '%s\n' "$KEEP" | awk '{print length"\t"$0}' | sort -rn -k1,1 | cut -f2- \
           | sed 's/[][\\.^$*+?(){}|\/]/\\&/g' | paste -sd'|' -)
 
 FIRST=$(printf '%s\n' "$REPOS" | head -1)
 git -C "$FIRST" grep -qP '(?<!\x01)x' -- . >/dev/null 2>&1
 [ $? -eq 128 ] && ENGINE=ere || ENGINE=pcre
-echo "== engine: $ENGINE =="
+echo "== engine: $ENGINE =="; echo
 
 scan() {
   if [ "$ENGINE" = pcre ]; then
@@ -352,17 +356,43 @@ scan() {
   fi
 }
 
-RAW=$(for r in $REPOS; do
-  [ -d "$r/.git" ] || { echo "skipped worktree: $r" >&2; continue; }
-  scan "$r" | sort | uniq -c | sed "s|^|$r |"
-done)
-printf '%s\n' "$RAW"
+RAW=$(for r in $REPOS; do scan "$r" | sort | uniq -c | sed "s|^|$r |"; done)
+
+# Rows you already investigated and disproved: "from -> to via handle"
+RULED=$(awk '/^## Edges ruled out/{r=1;next} /^## /{r=0} r&&/->/{print}' "$INDEX" 2>/dev/null \
+        | sed -E 's/^[-* ]*//; s/ *:.*//' | sed -E 's/ *-> */\t/; s/ +via +/\t/' | sort -u)
+
+# Three inputs by position: awk -v cannot carry multi-line values.
+EDGES=$(awk -v min="$MIN_HITS" '
+  FNR==1 { part++ }
+  part==1 { split($0,F,"\t"); if(F[1]!="") owner[F[1]]=F[2]; next }
+  part==2 { if($0!="") out[$0]=1; next }
+  { from=$1; cnt=$2+0; h=$3; to=owner[h]
+    if (to=="" || to==from || cnt<min) next
+    if ((from"\t"to"\t"h) in out) next
+    print from"\t"to"\t"h"\t"cnt }
+' <(printf '%s\n' "$MAP") <(printf '%s\n' "$RULED") <(printf '%s\n' "$RAW") \
+  | sort -t"$(printf '\t')" -k1,1 -k2,2 -k4,4rn)
+
+echo "## Edges — derived $(date +%F), counts are matches"
+echo
+echo "| From | To | Matched handle | Hits |"
+echo "|---|---|---|---|"
+printf '%s\n' "$EDGES" | awk -F'\t' 'NF==4{printf "| `%s` | `%s` | `%s` | %d |\n",$1,$2,$3,$4}'
+echo
+echo "## Inbound — inverted from Edges. Never authored."
+echo
+printf '%s\n' "$EDGES" | awk -F'\t' 'NF==4{k=$2"\t"$1; sum[k]+=$4}
+  END{ for(k in sum){ split(k,P,"\t"); agg[P[1]]=(agg[P[1]]==""?"":agg[P[1]]", ")P[2]"("sum[k]")" }
+       for(t in agg) print "- `"t"` <- "agg[t] }' | sort
 echo
 SEEN=$(printf '%s\n' "$RAW" | awk '{print $3}' | sort -u)
 report "zero hits anywhere (dead weight)" "$(comm -23 <(printf '%s\n' "$KEEP" | sort) <(printf '%s\n' "$SEEN"))"
 ```
 
-Drop self-matches and anything under 2 hits. **On the ERE fallback, verify a count of 1 before dropping it:** `grep -o` does not overlap, so a handle whose neighbour was consumed by the previous match loses its boundary and goes uncounted. Measured at 26 missed matches in 6,148 — under half a percent, and it changed exactly one row, but that row sat on the drop threshold. The PCRE path has no such gap because a lookaround consumes nothing.
+It prints the three derived sections ready to paste: self-matches, sub-threshold rows and anything listed under "Edges ruled out" in the existing INDEX are already gone, and Inbound is inverted from what survives. Nothing below "Routing" is assembled by hand any more.
+
+**On the ERE fallback, verify a count of 1 before accepting the threshold's verdict:** `grep -o` does not overlap, so a handle whose neighbour was consumed by the previous match loses its boundary and goes uncounted. Measured at 26 missed matches in 6,148 — under half a percent, and it changed exactly one row, but that row sat on the drop threshold. The PCRE path has no such gap because a lookaround consumes nothing.
 
 **Do not add `*.json` to that glob.** In one real repo 15,922 JSON data files carried a handle string against a few hundred source files, tripling the scan time while burying the signal.
 
@@ -370,7 +400,7 @@ Drop self-matches and anything under 2 hits. **On the ERE fallback, verify a cou
 
 **The reports print even when empty**, showing `(none)`. Otherwise a silent section is ambiguous: it could mean nothing was dropped, or that this copy of the script has no such check. In one real run 26 of 121 handles were dead weight and nothing said so until it was counted by hand.
 
-**Check "Edges ruled out" before treating a row as new.** The join has no memory: a row you investigated and disproved comes back identical on every regeneration. Read that section first and leave the disproved rows out, or you will re-litigate the same false edge every time.
+**"Edges ruled out" is an input, not a note.** The script reads it from the existing `INDEX.md` and suppresses those rows, so a disproved edge stays disproved across regenerations instead of returning as new. Write each one as `- from -> to via handle : reason`; the reason is for the next reader, the first three fields are what the filter matches. Delete a line once the join stops producing it.
 
 **Unmatched — six categories, not two.** Run the second pass to find what each repo reaches for:
 

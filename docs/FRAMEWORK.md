@@ -303,7 +303,7 @@ serves:
 scanned: 2026-09-01
 ```
 
-Edges are never authored — they are **derived** by one batched grep per repo (about 10 seconds across six repos, the largest holding 31,000 files) and written into the INDEX together with their inversion. That inversion matters: in the hand-written catalog this pattern replaced, the most-connected repo recorded zero of its inbound edges while seven other entries declared edges into it. When both ends may write an edge, both ends are wrong.
+Edges are never authored — they are **derived**. One batched grep per repo (about 2 seconds across six repos where PCRE is available, the largest holding 31,000 files) feeds a script that drops self-matches and sub-threshold rows, suppresses anything the INDEX lists under "Edges ruled out", and emits the Edges table and its inversion ready to paste. That last part matters more than it sounds: a disproved edge otherwise returns identical on every regeneration, so the only authored section in the file is the list of rows a human has already refuted. That inversion matters: in the hand-written catalog this pattern replaced, the most-connected repo recorded zero of its inbound edges while seven other entries declared edges into it. When both ends may write an edge, both ends are wrong.
 
 Three rules were each paid for in false positives from real runs:
 
