@@ -313,8 +313,11 @@ fix the repo's .claude/handles.local.md and re-run the join at the bottom.*
 BLOCK='^(API_URL|BASE_URL|HOST_URL|DATABASE_URL|DB_HOST|REDIS_URL|PORT|GATEWAY_URL|BACKEND_URL|FRONTEND_URL|SERVICE_URL|WEBHOOK_URL|API_BASE_URL|CLIENT_URL|PUBLIC_URL)$'
 MIN_HITS=2
 INDEX=INDEX.md
+TMPERR=$(mktemp)
+trap "rm -f $TMPERR" EXIT
 
 REPOS=$(for d in */; do [ -d "$d/.git" ] && echo "${d%/}"; done)
+for d in */; do [ -e "$d/.git" ] && [ ! -d "$d/.git" ] && echo "skipped worktree: ${d%/}" >&2; done
 [ -z "$REPOS" ] && { echo "no git repos here" >&2; exit 1; }
 
 # handle <TAB> the repo that serves it
@@ -323,11 +326,15 @@ MAP=$(for r in $REPOS; do
           "$r"/.claude/handles*.md 2>/dev/null
       done)
 ALL=$(printf '%s\n' "$MAP" | cut -f1 | sort -u)
+DUP=$(printf '%s\n' "$MAP" | sort -u | cut -f1 | uniq -d)
 
 SHORT=$(printf '%s\n' "$ALL" | grep -vE '^.{3,}$')
 BLOCKED=$(printf '%s\n' "$ALL" | grep -E "$BLOCK")
-BARE=$(printf '%s\n' "$ALL" | grep -E '^.{3,}$' | grep -vE "$BLOCK" | grep -vE '[@/_.-]|[A-Z]')
-KEEP=$(printf '%s\n' "$ALL" | grep -E '^.{3,}$' | grep -vE "$BLOCK" | grep -E '[@/_.-]|[A-Z]')
+# Qualified = has a separator/scope, or is an ALL-CAPS env-var shape.
+# Any-uppercase is too loose: a bare proper noun like `Piston` would pass.
+QUAL='[@/_.-]|^[A-Z0-9]+$'
+BARE=$(printf '%s\n' "$ALL" | grep -E '^.{3,}$' | grep -vE "$BLOCK" | grep -vE "$QUAL")
+KEEP=$(printf '%s\n' "$ALL" | grep -E '^.{3,}$' | grep -vE "$BLOCK" | grep -E "$QUAL")
 
 report() { echo "== $1 =="; if [ -n "$2" ]; then printf '%s\n' "$2"; else echo "(none)"; fi; echo; }
 report "dropped: shorter than 3" "$SHORT"
@@ -358,33 +365,52 @@ scan() {
 
 RAW=$(for r in $REPOS; do scan "$r" | sort | uniq -c | sed "s|^|$r |"; done)
 
-# Rows you already investigated and disproved: "from -> to via handle"
-RULED=$(awk '/^## Edges ruled out/{r=1;next} /^## /{r=0} r&&/->/{print}' "$INDEX" 2>/dev/null \
-        | sed -E 's/^[-* ]*//; s/ *:.*//' | sed -E 's/ *-> */\t/; s/ +via +/\t/' | sort -u)
+# Rows you already investigated and disproved: "from -> to via handle : reason".
+# Backticks stripped, because that is how a handle gets written in markdown and
+# an unstripped one failed to match in silence.
+RULED=$(awk '/^## Edges ruled out/{r=1;next} /^## /{r=0}
+             r && /^[-*]/ && /->/ && / via /{print}' "$INDEX" 2>/dev/null \
+        | tr -d '`' | sed -E 's/^[-* ]*//; s/ *:.*//' \
+        | sed -E 's/ *-> */\t/; s/ +via +/\t/' | sort -u)
 
-# Three inputs by position: awk -v cannot carry multi-line values.
-EDGES=$(awk -v min="$MIN_HITS" '
+# Threshold applies per PAIR, not per row: two handles naming the same service
+# are evidence for one edge, and splitting them must not drop it.
+DERIVED=$(awk -v min="$MIN_HITS" '
   FNR==1 { part++ }
   part==1 { split($0,F,"\t"); if(F[1]!="") owner[F[1]]=F[2]; next }
   part==2 { if($0!="") out[$0]=1; next }
   { from=$1; cnt=$2+0; h=$3; to=owner[h]
-    if (to=="" || to==from || cnt<min) next
-    if ((from"\t"to"\t"h) in out) next
-    print from"\t"to"\t"h"\t"cnt }
-' <(printf '%s\n' "$MAP") <(printf '%s\n' "$RULED") <(printf '%s\n' "$RAW") \
+    if (to=="" || to==from) next
+    if ((from"\t"to"\t"h) in out) { used[from"\t"to"\t"h]=1; next }
+    rows[++n]=from"\t"to"\t"h"\t"cnt; pair[from"\t"to]+=cnt }
+  END{ for(i=1;i<=n;i++){ split(rows[i],R,"\t")
+         if (pair[R[1]"\t"R[2]] >= min) print rows[i] }
+       for(k in out) if (!(k in used)) print "STALE\t"k > "/dev/stderr" }
+' <(printf '%s\n' "$MAP") <(printf '%s\n' "$RULED") <(printf '%s\n' "$RAW") 2>"$TMPERR" \
   | sort -t"$(printf '\t')" -k1,1 -k2,2 -k4,4rn)
+
+NRULED=$(printf '%s\n' "$RULED" | grep -c '[^[:space:]]')
+NSTALE=$(grep -c '^STALE' "$TMPERR" 2>/dev/null || echo 0)
+echo "== ruled out: $NRULED entries read, $((NRULED-NSTALE)) matched a row, $NSTALE matched nothing =="
+[ "$NSTALE" -gt 0 ] && { echo "   these no longer appear in the scan and can be deleted:"
+                         sed -n 's/^STALE\t/   - /p' "$TMPERR" | tr '\t' ' '; }
+echo
 
 echo "## Edges — derived $(date +%F), counts are matches"
 echo
 echo "| From | To | Matched handle | Hits |"
 echo "|---|---|---|---|"
-printf '%s\n' "$EDGES" | awk -F'\t' 'NF==4{printf "| `%s` | `%s` | `%s` | %d |\n",$1,$2,$3,$4}'
+printf '%s\n' "$DERIVED" | awk -F'\t' 'NF==4{printf "| `%s` | `%s` | `%s` | %d |\n",$1,$2,$3,$4}'
 echo
 echo "## Inbound — inverted from Edges. Never authored."
 echo
-printf '%s\n' "$EDGES" | awk -F'\t' 'NF==4{k=$2"\t"$1; sum[k]+=$4}
-  END{ for(k in sum){ split(k,P,"\t"); agg[P[1]]=(agg[P[1]]==""?"":agg[P[1]]", ")P[2]"("sum[k]")" }
-       for(t in agg) print "- `"t"` <- "agg[t] }' | sort
+printf '%s\n' "$DERIVED" | awk -F'\t' 'NF==4{k=$2"\t"$1; sum[k]+=$4}
+  END{ for(k in sum){ split(k,P,"\t"); n[P[1]]++; byto[P[1]"\t"n[P[1]]]=P[2]"("sum[k]")"; w[P[1]"\t"n[P[1]]]=sum[k] }
+       for(t in n){ line=""
+         for(pass=0;pass<n[t];pass++){ best=-1; bi=0
+           for(i=1;i<=n[t];i++) if(w[t"\t"i]>best){best=w[t"\t"i];bi=i}
+           line=line (line==""?"":", ") byto[t"\t"bi]; w[t"\t"bi]=-2 }
+         print "- `"t"` <- "line } }' | sort
 echo
 SEEN=$(printf '%s\n' "$RAW" | awk '{print $3}' | sort -u)
 report "zero hits anywhere (dead weight)" "$(comm -23 <(printf '%s\n' "$KEEP" | sort) <(printf '%s\n' "$SEEN"))"
@@ -392,7 +418,9 @@ report "zero hits anywhere (dead weight)" "$(comm -23 <(printf '%s\n' "$KEEP" | 
 
 It prints the three derived sections ready to paste: self-matches, sub-threshold rows and anything listed under "Edges ruled out" in the existing INDEX are already gone, and Inbound is inverted from what survives. Nothing below "Routing" is assembled by hand any more.
 
-**On the ERE fallback, verify a count of 1 before accepting the threshold's verdict:** `grep -o` does not overlap, so a handle whose neighbour was consumed by the previous match loses its boundary and goes uncounted. Measured at 26 missed matches in 6,148 — under half a percent, and it changed exactly one row, but that row sat on the drop threshold. The PCRE path has no such gap because a lookaround consumes nothing.
+**The threshold counts per pair, not per row.** Two handles naming the same service are evidence for one edge, so they are summed before the cut and every contributing row is then shown, including single hits. This is not a refinement: applying it per row silently destroyed a real edge the moment a second name for the same host was added, because evidence that had been 2 became 1 and 1. If you ever see an edge vanish after *adding* a handle, this is why.
+
+**On the ERE fallback, treat a low count as soft.** `grep -o` does not overlap, so a handle whose neighbour was consumed by the previous match loses its boundary and goes uncounted — 26 missed in 6,148, enough to move a pair across the cut. The PCRE path has no such gap because a lookaround consumes nothing. The script does not print rows whose pair failed the threshold, so on the fallback a missing edge you expected is worth re-checking by hand before believing it.
 
 **Do not add `*.json` to that glob.** In one real repo 15,922 JSON data files carried a handle string against a few hundred source files, tripling the scan time while burying the signal.
 
@@ -400,7 +428,7 @@ It prints the three derived sections ready to paste: self-matches, sub-threshold
 
 **The reports print even when empty**, showing `(none)`. Otherwise a silent section is ambiguous: it could mean nothing was dropped, or that this copy of the script has no such check. In one real run 26 of 121 handles were dead weight and nothing said so until it was counted by hand.
 
-**"Edges ruled out" is an input, not a note.** The script reads it from the existing `INDEX.md` and suppresses those rows, so a disproved edge stays disproved across regenerations instead of returning as new. Write each one as `- from -> to via handle : reason`; the reason is for the next reader, the first three fields are what the filter matches. Delete a line once the join stops producing it.
+**"Edges ruled out" is an input, not a note.** The script reads it from the existing `INDEX.md` and suppresses those rows, so a disproved edge stays disproved across regenerations instead of returning as new. Write each one as `- from -> to via handle : reason` — a list item, with ` via ` present. Backticks around the names are fine and stripped; prose in that section is ignored, since a stray sentence containing an arrow would otherwise suppress a real row in silence. After each run the script reports how many entries it read, how many matched, and names the ones that matched nothing so you know which lines are now stale and can go.
 
 **Unmatched — six categories, not two.** Run the second pass to find what each repo reaches for:
 

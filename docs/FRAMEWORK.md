@@ -303,7 +303,11 @@ serves:
 scanned: 2026-09-01
 ```
 
-Edges are never authored — they are **derived**. One batched grep per repo (about 2 seconds across six repos where PCRE is available, the largest holding 31,000 files) feeds a script that drops self-matches and sub-threshold rows, suppresses anything the INDEX lists under "Edges ruled out", and emits the Edges table and its inversion ready to paste. That last part matters more than it sounds: a disproved edge otherwise returns identical on every regeneration, so the only authored section in the file is the list of rows a human has already refuted. That inversion matters: in the hand-written catalog this pattern replaced, the most-connected repo recorded zero of its inbound edges while seven other entries declared edges into it. When both ends may write an edge, both ends are wrong.
+Edges are never authored — they are **derived**. One batched grep per repo (about 2 seconds across six repos where PCRE is available, the largest holding 31,000 files) feeds a script that drops self-matches and sub-threshold rows, suppresses anything the INDEX lists under "Edges ruled out", and emits the Edges table and its inversion ready to paste. That last part matters more than it sounds: a disproved edge otherwise returns identical on every regeneration, so the only authored section in the file is the list of rows a human has already refuted.
+
+The threshold that filters noise counts **per pair, not per row**, and that distinction was paid for. Advice to record both a service's short label and its full hostname — more complete, obviously correct — destroyed a real edge on the next run: evidence that had been two hits became one and one, and each row fell under the cut independently. Two names for the same service are evidence for one edge. An edge that disappears after you *add* a handle is the signature of getting this wrong.
+
+A later run confirmed the loop closes: the table the script derives matched, row for row and count for count, the one a careful reader had been assembling by hand for three rounds. That inversion matters: in the hand-written catalog this pattern replaced, the most-connected repo recorded zero of its inbound edges while seven other entries declared edges into it. When both ends may write an edge, both ends are wrong.
 
 Three rules were each paid for in false positives from real runs:
 
