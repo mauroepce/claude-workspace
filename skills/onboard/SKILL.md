@@ -14,15 +14,24 @@ This is the meta-command that ties `/conventions`, `/architecture`, and `/journe
 
 Two checks BEFORE the sanity check, because they change where everything gets written:
 
-```bash
-# A. Workspace root? Ask about THIS directory only, then count child repos.
-# `test -e .git` not `git rev-parse`: rev-parse answers about the whole work
-# tree, so it says "is a repo" in every subdirectory of a parent repo and the
-# workspace check never fires. `-e` not `-d` because a worktree's .git is a FILE.
-test -e .git && echo "this dir is a repo" || echo "not a repo"
-ls -d */.git 2>/dev/null | wc -l          # how many direct children are repos
+Run all three. The third is not optional: a repo and a workspace are not exclusive, and skipping it is how a workspace hidden one level down gets missed.
 
-# B. Team-owned tooling? (the repo commits .claude/ content or a CLAUDE.md)
+```bash
+# A. Is THIS directory a repo? `test -e .git`, not `git rev-parse`: rev-parse
+# answers about the whole work tree, so it says yes in every subdirectory of a
+# parent repo. `-e` not `-d` because a worktree's .git is a FILE.
+test -e .git && echo "this dir is a repo" || echo "not a repo"
+
+# B. Are its direct children repos? (worktrees count here; the join skips them)
+ls -d */.git 2>/dev/null | wc -l | tr -d ' '
+
+# C. Is the workspace one level down? ALWAYS run this, whatever A and B said.
+for c in */; do
+  n=$(ls -d "$c"*/.git 2>/dev/null | wc -l | tr -d ' ')
+  [ "$n" -ge 2 ] && echo "workspace candidate: $c ($n repos)"
+done
+
+# D. Team-owned tooling? (the repo commits .claude/ content or a CLAUDE.md)
 git ls-files .claude CLAUDE.md 2>/dev/null | head -5
 ```
 
@@ -30,16 +39,9 @@ Note for `zsh` users: an unmatched glob aborts the command instead of returning 
 
 **Case A — no `.git` in THIS directory but 2+ child directories are git repos** → this is a workspace folder, not a codebase. Jump to "Workspace mode" below. Do NOT stop with "not a git repo".
 
-A workspace often lives *inside* a repo — a parent repo holding docs and skills, with the projects cloned into `repos/`. Nothing routes you there automatically, so look:
+A workspace often lives *inside* a repo — a parent repo holding docs and skills, with the projects cloned into `repos/`. That is why check C runs unconditionally: in that layout A says "this dir is a repo", D says "team-owned", and an agent reading the cases in order would settle on single-repo onboarding and never look down.
 
-```bash
-for c in */; do
-  n=$(ls -d "$c"*/.git 2>/dev/null | wc -l)
-  [ "$n" -ge 2 ] && echo "workspace candidate: $c ($n repos)"
-done
-```
-
-If that names a folder, say so and run workspace mode **there**, not here. The outer repo is then a sibling of the workspace, not a member of it: the join only walks the workspace's direct children, so an outer repo stays outside the graph. Tell the user that explicitly rather than letting them assume it was scanned.
+If C names a folder, say so and run workspace mode **there**. The outer repo is then a sibling of the workspace, not a member: the join walks the workspace's direct children only, so the outer repo stays outside the graph. Say that out loud rather than letting the user assume it was scanned.
 
 **Case B — tracked `.claude/` files or a CLAUDE.md exist** → this repo belongs to a team, and your onboarding artifacts are personal notes, not team deliverables. Announce it:
 
@@ -223,6 +225,12 @@ scanned: <date>
 
 `aka:` is **vocabulary**. Bare product and service names — `langgraph`, `qdrant`, `piston`, `lims` — that let a reader map a task phrase ("the langgraph service is timing out") onto a repo. They feed the INDEX's "Names" section. They are **not** used to derive edges.
 
+Moving bare names here removes them from the edge graph but not from the reader's path: "Names" is the first thing Routing consults, so a bad `aka:` misroutes instead of inventing an edge, and no script will catch it. Three rules, applied by hand:
+
+- **No common English words.** `roadmap`, `dashboard`, `gateway` will match a task phrase that has nothing to do with the repo.
+- **Flag collisions explicitly.** If a name also means something else (`gae` is both an image here and Google App Engine; `aiworker` is both a directory here and an uncloned repo), write the qualifier next to it in "Names". An ambiguous alias that looks certain is worse than none.
+- **Drop an alias for a subcomponent.** A name that refers to one folder inside the repo, not to the repo, sends whole tasks to the wrong place.
+
 `serves:` is **addresses**. Qualified strings another repo would literally contain if it talked to this one: package names, env vars naming this service, deployable names. Read it as *these are the strings another repo would contain if it talked to me, and here is what implements each one.* Only these feed the join.
 
 Why the split, measured: a run that put bare names in `serves:` produced fourteen new edge rows and **not one new true dependency**. Six were backed by code, six were real pairs whose only evidence was prose, one recorded where code had been copied from, and one was an outright false pair pointing the wrong way — a comment in a gateway repo describing its *consumer* became an edge *to* that consumer. One bare name alone supplied 73% and 81% of the hits on two pairs it did not discover. Word boundaries fix substring noise; they cannot tell a call from a sentence, and prose is where product names live.
@@ -231,7 +239,9 @@ Why the split, measured: a run that put bare names in `serves:` produced fourtee
 
 1. **Published package names.** `git ls-files '*package.json' 'pyproject.toml'` — take the `name` field. Skip anything private, and skip vendored upstream code and example/demo packages: a repo that vendors a framework will otherwise claim that framework's name. Check `private` loosely — it appears as both `true` and `"true"` in the wild.
 2. **Deployable names in your own manifests.** `git ls-files 'docker-compose*' 'k8s/**/*.yaml' 'Dockerfile*'`. Only count a name if **this repo builds it** — a deploy repo's manifests name everyone's services, and claiming them makes that repo appear to serve half the platform.
-3. **The env var peers use to reach you.** This one is backwards by default and needs care: the `*_URL` variables inside a repo are overwhelmingly the ones it **consumes**, not the ones it answers to. `lims` contains `WALLET_API_URL` because it *calls* the wallet, not because it *is* the wallet. Only claim such a variable as a handle if you can see this repo **serving** that address — it appears in this repo's own deploy manifest as its published host, or its value points at this repo's service. When in doubt leave it out; a wrongly claimed variable invents an inbound edge that does not exist.
+3. **Artifact names.** Not every dependency is a call. A repo can depend on another through what it *produces*: its GitHub slug (`Org/repo`), a storage bucket its CI writes, a published report path. These leave clean, greppable traces and belong in `serves:` on the repo that produces the artifact. Skipping this category cost a real edge in a live run — a test-analytics repo that reads another repo's CI reports had no detectable relationship at all, because nothing it referenced was a service address.
+
+4. **The env var peers use to reach you.** This one is backwards by default and needs care: the `*_URL` variables inside a repo are overwhelmingly the ones it **consumes**, not the ones it answers to. `lims` contains `WALLET_API_URL` because it *calls* the wallet, not because it *is* the wallet. Only claim such a variable as a handle if you can see this repo **serving** that address — it appears in this repo's own deploy manifest as its published host, or its value points at this repo's service. When in doubt leave it out; a wrongly claimed variable invents an inbound edge that does not exist.
 
 For the `:: path` on an env-var handle, point at the directory that answers the requests (`server/`, `gateway/`), not at a file that merely mentions the name. If you cannot tell, write `::` with the repo root and say so in the INDEX.
 
@@ -243,7 +253,7 @@ For the `:: path` on an env-var handle, point at the directory that answers the 
 
 Two source rules that look right and are not:
 
-- *"Only count a name if this repo builds it"* wrongly excludes a Deployment this repo owns that runs an upstream image (`qdrant`, `redis`, `postgres`). The test is **who owns the manifest**, not who built the binary. Do exclude a name whose image is built elsewhere and merely referenced here.
+- *"Only count a name if this repo builds it"* wrongly excludes a Deployment this repo owns that runs an upstream image (`qdrant`, `redis`, `postgres`). But "who owns the manifest" alone is equally wrong, and the two together leave names nobody may claim: a deploy repo writes the manifest for a service whose code lives elsewhere, so the first rule excludes it from the deploy repo and the second excludes it from the code repo. **The owner is the repo whose code answers the request.** A deploy repo naming someone else's service is a *caller*, which is exactly what the join should detect; it does not get to serve that name.
 - *"Skip anything private"* wrongly excludes a private root package whose name is the product itself. Skip private **sub**packages and vendored code; keep the name the repo is known by — in `aka:`, since it will be a bare word.
 
 If a repo has no distinctive address, leave `serves:` empty and say so. An empty block is honest; an invented handle is not.
@@ -300,19 +310,33 @@ fix the repo's .claude/handles.local.md and re-run the join at the bottom.*
 **The join.** Run from the workspace root, in `bash`. It picks its own regex engine, enforces the blocklist, and reports what it threw away:
 
 ```bash
-# Only the `serves:` block feeds the join. `aka:` is vocabulary, not addresses.
 BLOCK='^(API_URL|BASE_URL|HOST_URL|DATABASE_URL|DB_HOST|REDIS_URL|PORT|GATEWAY_URL|BACKEND_URL|FRONTEND_URL|SERVICE_URL|WEBHOOK_URL|API_BASE_URL|CLIENT_URL|PUBLIC_URL)$'
-ALL=$(awk -F' :: ' '/^serves:/{s=1;next} /^scanned:/{s=0} s&&/^- /{sub(/^- /,"");gsub(/ +$/,"",$1);print $1}' \
-        */.claude/handles*.md | sort -u)
-KEEP=$(printf '%s\n' "$ALL" | grep -E '^.{3,}$' | grep -vE "$BLOCK")
-DROP=$(comm -23 <(printf '%s\n' "$ALL") <(printf '%s\n' "$KEEP"))
-[ -n "$DROP" ] && { echo "== dropped (too short or blocklisted) =="; printf '%s\n' "$DROP"; echo; }
-HANDLES=$(printf '%s\n' "$KEEP" | sed 's/[.[\*^$]/\\&/g' | paste -sd'|' -)
+REPOS=$(for d in */; do [ -d "$d/.git" ] && echo "${d%/}"; done)
+[ -z "$REPOS" ] && { echo "no git repos here" >&2; exit 1; }
 
-# Engine, decided once. PCRE is exact and roughly ten times faster; ERE is the
-# fallback. A lookaround pattern is what forces the PCRE path to compile, so a
-# plain probe pattern would wrongly report success. Exit 128 means no PCRE.
-FIRST=$(for d in */; do [ -d "$d/.git" ] && { echo "$d"; break; }; done)
+ALL=$(for r in $REPOS; do
+        awk -F' :: ' '/^serves:/{s=1;next} /^scanned:/{s=0} s&&/^- /{sub(/^- /,"");gsub(/ +$/,"",$1);print $1}' \
+          "$r"/.claude/handles*.md 2>/dev/null
+      done | sort -u)
+
+SHORT=$(printf '%s\n' "$ALL" | grep -vE '^.{3,}$')
+BLOCKED=$(printf '%s\n' "$ALL" | grep -E "$BLOCK")
+BARE=$(printf '%s\n' "$ALL" | grep -E '^.{3,}$' | grep -vE "$BLOCK" | grep -vE '[@/_.-]|[A-Z]')
+KEEP=$(printf '%s\n' "$ALL" | grep -E '^.{3,}$' | grep -vE "$BLOCK" | grep -E '[@/_.-]|[A-Z]')
+
+report() { echo "== $1 =="; if [ -n "$2" ]; then printf '%s\n' "$2"; else echo "(none)"; fi; echo; }
+report "dropped: shorter than 3" "$SHORT"
+report "dropped: blocklisted generic" "$BLOCKED"
+report "dropped: unqualified, belongs in aka:" "$BARE"
+
+# Longest first: PCRE alternation is leftmost-FIRST, so a handle that prefixes
+# another would otherwise swallow every match of the longer one.
+# Escape every ERE/PCRE metacharacter, not just a few: one unescaped '+' aborts
+# the whole scan with a regex error rather than missing quietly.
+HANDLES=$(printf '%s\n' "$KEEP" | awk '{print length"\t"$0}' | sort -rn -k1,1 | cut -f2- \
+          | sed 's/[][\\.^$*+?(){}|\/]/\\&/g' | paste -sd'|' -)
+
+FIRST=$(printf '%s\n' "$REPOS" | head -1)
 git -C "$FIRST" grep -qP '(?<!\x01)x' -- . >/dev/null 2>&1
 [ $? -eq 128 ] && ENGINE=ere || ENGINE=pcre
 echo "== engine: $ENGINE =="
@@ -328,16 +352,14 @@ scan() {
   fi
 }
 
-RAW=$(for d in */; do
-  [ -e "$d/.git" ] || continue
-  [ -d "$d/.git" ] || { echo "skipped worktree: ${d%/}" >&2; continue; }
-  scan "$d" | sort | uniq -c | sed "s|^|${d%/} |"
+RAW=$(for r in $REPOS; do
+  [ -d "$r/.git" ] || { echo "skipped worktree: $r" >&2; continue; }
+  scan "$r" | sort | uniq -c | sed "s|^|$r |"
 done)
 printf '%s\n' "$RAW"
-
+echo
 SEEN=$(printf '%s\n' "$RAW" | awk '{print $3}' | sort -u)
-DEAD=$(comm -23 <(printf '%s\n' "$KEEP") <(printf '%s\n' "$SEEN"))
-[ -n "$DEAD" ] && { echo; echo "== zero hits anywhere (dead weight) =="; printf '%s\n' "$DEAD"; }
+report "zero hits anywhere (dead weight)" "$(comm -23 <(printf '%s\n' "$KEEP" | sort) <(printf '%s\n' "$SEEN"))"
 ```
 
 Drop self-matches and anything under 2 hits. **On the ERE fallback, verify a count of 1 before dropping it:** `grep -o` does not overlap, so a handle whose neighbour was consumed by the previous match loses its boundary and goes uncounted. Measured at 26 missed matches in 6,148 — under half a percent, and it changed exactly one row, but that row sat on the drop threshold. The PCRE path has no such gap because a lookaround consumes nothing.
@@ -346,9 +368,11 @@ Drop self-matches and anything under 2 hits. **On the ERE fallback, verify a cou
 
 **Timing, measured on six repos with 31,000 files in the largest:** about 2 seconds on the PCRE path, about 25 on the ERE fallback. If the fallback is what you get and it becomes annoying, that is the argument for installing a `git` built with PCRE, not for narrowing the glob.
 
-**Both reports matter.** A handle dropped by the filter and a handle nobody references look identical in the output otherwise. In one real run 28 of 125 handles were dead weight and nothing said so.
+**The reports print even when empty**, showing `(none)`. Otherwise a silent section is ambiguous: it could mean nothing was dropped, or that this copy of the script has no such check. In one real run 26 of 121 handles were dead weight and nothing said so until it was counted by hand.
 
-**Unmatched — five categories, not two.** Run the second pass to find what each repo reaches for:
+**Check "Edges ruled out" before treating a row as new.** The join has no memory: a row you investigated and disproved comes back identical on every regeneration. Read that section first and leave the disproved rows out, or you will re-litigate the same false edge every time.
+
+**Unmatched — six categories, not two.** Run the second pass to find what each repo reaches for:
 
 ```bash
 git -C "$d" grep -hoE '[A-Z][A-Z0-9_]*_(URL|URI|HOST|ENDPOINT)' \
@@ -363,6 +387,8 @@ Sort every result that matches no handle into:
 - **Own infrastructure.** Database, cache, queue, tunnel. Not a service dependency.
 - **Not a dependency at all.** Test constants, regex fragments, and prefixes the pattern truncated (`ARTIFACT_URI` cut out of `ARTIFACT_URI_SCHEME`). Say so rather than inventing an edge.
 - **Undetermined.** You looked and could not place it: no committed value, no catalog entry, read-only usage. Say that, with where you looked. A forced guess in one of the five categories above is worse than an honest sixth.
+
+**A qualified handle is still not proof of a call.** Boundaries remove substring noise and the `aka:` split removes bare-word noise, but a qualified name quoted in a comment or a docstring counts exactly like one in a function call. When an edge's evidence looks thin, read the hits before believing it, and put the ones you disprove in "Edges ruled out".
 
 **Known blind spots.** Record what this method structurally cannot see, so a gap is never read as an absence. The recurring ones: a call made on a relative path against a host held in a shared client object; dispatch through a registry or a slug; a shared URI scheme or route contract that no handle names; and every file type outside the join's glob.
 
