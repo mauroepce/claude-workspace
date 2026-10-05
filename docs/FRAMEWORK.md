@@ -1,6 +1,6 @@
 # The Framework
 
-> A short, opinionated methodology for working with AI agents on production code. Not theoretical — the sixteen `skills/` in this repo encode it.
+> A short, opinionated methodology for working with AI agents on production code. Not theoretical — the seventeen `skills/` in this repo encode it.
 
 ## The thesis
 
@@ -14,7 +14,7 @@ The work has shifted. Writing code is no longer the senior skill — **directing
 
 This isn't novel philosophy. It's the practical operating model of senior engineers who have shipped real production code with agents in 2025–2026. The commands in this repo make it executable.
 
-## The sixteen skills
+## The seventeen skills
 
 Each skill is a folder `skills/<name>/SKILL.md` installed to `~/.claude/skills/`. Two invocation paths:
 
@@ -96,6 +96,14 @@ Detects user journeys in a codebase (auth flows, payment flows, main feature act
 Why Mermaid: renders natively in GitHub, VS Code with the Mermaid extension, and most modern markdown viewers. No external tool needed. Versions in git just like code.
 
 Why journey diagrams: they answer "when a user does X, what actually happens through the stack?" — the highest-leverage artifact for explaining behavior to humans. Architecture maps show the parts; journeys show how the parts cooperate over time.
+
+#### `/explain` — explanation from the foundations up
+
+Explains a system, bug, ticket, PR or design decision in the order that makes it understandable: the design first, then the mechanism, then the problem, then why the chosen solution is the only sensible one. The output is numbered PARTS that build on each other, closed by a five-sentence summary that has to read on its own.
+
+Phase 0 is mandatory and is what separates this from a summary: read the real schema, query the real data, open the function that consumes it. Every claim has to be backed by something actually read — if the explanation says "the code never looks at `is_active`", it shows the function where it doesn't appear.
+
+The highest-value section is "why NOT": one subsection per credible alternative, each with a verified reason it loses. Without it a solution reads as arbitrary; with it, it reads as inevitable. `/journeys` explains behavior to humans with a diagram; `/explain` does it in prose and goes one level deeper — into why the design permits that behavior at all.
 
 #### `/onboard` — joining a new codebase
 

@@ -2,11 +2,11 @@
 
 # claude-workspace
 
-**A senior workflow for Claude Code, encoded as 16 skills, 4 hooks, and one habit: open the session one level above the repos.**
+**A senior workflow for Claude Code, encoded as 17 skills, 4 hooks, and one habit: open the session one level above the repos.**
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](./LICENSE)
 [![Plugin version](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fmauroepce%2Fclaude-workspace%2Fmain%2F.claude-plugin%2Fplugin.json&query=%24.version&label=plugin&color=6C63FF)](./.claude-plugin/plugin.json)
-[![Skills](https://img.shields.io/badge/skills-16-C9A84C)](./docs/FRAMEWORK.md#the-sixteen-skills)
+[![Skills](https://img.shields.io/badge/skills-17-C9A84C)](./docs/FRAMEWORK.md#the-seventeen-skills)
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen)](./CONTRIBUTING.md)
 
 </div>
@@ -83,7 +83,7 @@ curl -fsSL https://raw.githubusercontent.com/mauroepce/claude-workspace/main/bin
 ```
 
 Installs:
-- 16 skills to `~/.claude/skills/<name>/SKILL.md` (invoked as bare `/work`, `/conventions`, ...)
+- 17 skills to `~/.claude/skills/<name>/SKILL.md` (invoked as bare `/work`, `/conventions`, ...)
 - 9 code templates + 1 CI workflow template to `~/.claude/templates/`
 - The `code-reviewer` subagent to `~/.claude/agents/`
 
@@ -161,6 +161,7 @@ Works for an organization's repo fleet, a service + front product pair, or any m
 | `/conventions` | Scan codebase for style patterns, persist to `.claude/conventions.md` |
 | `/architecture` | Scan codebase structure, persist to `.claude/architecture-map.md` |
 | `/journeys` | Detect user flows, produce Mermaid sequence diagrams |
+| `/explain` | Explain a system, bug or decision from the foundations up: design → mechanism → problem → why this solution |
 | `/decision` | Capture a technical decision with alternatives + confidence level |
 | `/code-review` | Quality review of staged changes (atomic, reusable) |
 | `/safe-commit` | `/code-review` + `/security-review` + spec check + commit with confirmation |
@@ -210,7 +211,7 @@ curl -fsSL https://raw.githubusercontent.com/mauroepce/claude-workspace/main/bin
 **Uninstall** — plugin installs: from `/plugin`. Curl installs:
 
 ```bash
-rm -rf ~/.claude/skills/{work,quick-work,todo,issue,debug,conventions,architecture,journeys,decision,code-review,safe-commit,safe-push,scaffold,onboard,isolate,commands}
+rm -rf ~/.claude/skills/{work,quick-work,todo,issue,debug,conventions,architecture,journeys,explain,decision,code-review,safe-commit,safe-push,scaffold,onboard,isolate,commands}
 rm -rf ~/.claude/templates/
 ```
 

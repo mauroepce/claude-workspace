@@ -183,10 +183,10 @@ echo "${BOLD}[5/6] Framework skills${RESET}"
 
 if [ -d "${HOME}/.claude/skills" ]; then
   skill_count=$(find "${HOME}/.claude/skills" -mindepth 2 -maxdepth 2 -name "SKILL.md" 2>/dev/null | wc -l | tr -d ' ')
-  if [ "$skill_count" -ge 15 ]; then
+  if [ "$skill_count" -ge 16 ]; then
     pass "$skill_count personal skills installed at ~/.claude/skills/"
   elif [ "$skill_count" -gt 0 ]; then
-    warn "$skill_count personal skills installed (expected 16+)"
+    warn "$skill_count personal skills installed (expected 17+)"
     info "Some skills may be missing. Re-run bin/install-personal.sh."
   else
     fail "No personal skills found at ~/.claude/skills/"

@@ -36,7 +36,7 @@ Group skills by category:
 | Category | Skills |
 |---|---|
 | **Task framework** | `/work`, `/quick-work`, `/todo`, `/issue` |
-| **Codebase understanding** | `/conventions`, `/architecture`, `/journeys`, `/onboard` |
+| **Codebase understanding** | `/conventions`, `/architecture`, `/journeys`, `/explain`, `/onboard` |
 | **Debugging & decisions** | `/debug`, `/decision` |
 | **Code review & commit** | `/code-review`, `/safe-commit`, `/safe-push` |
 | **Scaffolding & environment** | `/scaffold`, `/isolate` |
@@ -61,7 +61,8 @@ Codebase understanding
   /conventions  — scan codebase for style/patterns (persists to .claude/conventions.md)
   /architecture — scan codebase structure (persists to .claude/architecture-map.md)
   /journeys     — Mermaid sequence diagrams of user flows
-  /onboard      — orchestrate the above three for day-one ramp-up
+  /explain      — explain a system/bug/decision from the foundations up
+  /onboard      — orchestrate conventions + architecture + journeys for day-one ramp-up
 
 Debugging & decisions
   /debug        — hypothesis-driven debugging
