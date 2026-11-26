@@ -1,4 +1,5 @@
 ---
+name: isolate
 description: Create a clean isolated workspace for a technical test, interview live-coding, or scratch experiment. Prevents Claude Code from walking up the directory tree and picking up contaminating context (other MVPs, monorepo skills, unrelated CLAUDE.md files). Use before any work that must NOT inherit ambient context from other projects.
 ---
 

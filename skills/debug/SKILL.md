@@ -1,4 +1,5 @@
 ---
+name: debug
 description: Systematic debugging — hypothesis before fix, root cause over symptom, scope decision before changing code. Use when a bug appears during implementation, in a log, or any time the answer isn't immediately obvious.
 ---
 

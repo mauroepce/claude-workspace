@@ -1,4 +1,5 @@
 ---
+name: explain
 description: Explain a system, bug, PR or design decision from the foundations up: design first, then the problem, then why this solution is the only sensible one, closing with a five-sentence summary. Use when the user asks to be explained something ("explain this", "how does this work", "why was it done this way"), and proactively when about to explain a system's design or a bug's root cause. Always reads the real code and data first, never from memory. Output is numbered PARTS, never a wall of text.
 ---
 

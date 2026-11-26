@@ -1,4 +1,5 @@
 ---
+name: scaffold
 description: List available templates from ~/.claude/templates/ and insert the chosen one into the working directory. Templates encode Mauricio's senior conventions and good practices, ready to copy-adapt. Use when starting a new file from scratch in any project — avoids re-typing boilerplate.
 ---
 

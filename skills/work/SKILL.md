@@ -1,4 +1,5 @@
 ---
+name: work
 description: Start a piece of work using the spec → generate → review → iterate framework. Forces you to define the spec before invoking any generation, predicts failure modes upfront, and sets up the review checklist for /safe-commit at the end.
 ---
 

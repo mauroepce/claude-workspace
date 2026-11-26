@@ -1,4 +1,5 @@
 ---
+name: commands
 description: List all installed personal slash commands with their descriptions, install dates, and a quick reference for what each does. Use when you're new to the toolkit, returning after a break, or just want to see what's available without browsing the filesystem.
 ---
 
@@ -39,7 +40,7 @@ Group skills by category:
 | **Codebase understanding** | `/conventions`, `/architecture`, `/journeys`, `/explain`, `/onboard` |
 | **Debugging & decisions** | `/debug`, `/decision` |
 | **Code review & commit** | `/code-review`, `/safe-commit`, `/safe-push` |
-| **Scaffolding & environment** | `/scaffold`, `/isolate` |
+| **Scaffolding & workspace** | `/scaffold`, `/add-repo`, `/isolate` |
 | **Meta** | `/commands` (this one) |
 
 If a skill doesn't fit any category, list it under "Other".
@@ -73,8 +74,9 @@ Code review & commit
   /safe-commit  — runs /code-review + /security-review + commit with confirm
   /safe-push    — full-branch review + push (refuses main without OK)
 
-Scaffolding & environment
+Scaffolding & workspace
   /scaffold     — pick a template from ~/.claude/templates/ and insert it
+  /add-repo     — add a repo to a workspace (proposed destination + confirmation)
   /isolate      — clean workspace for tests/interviews (prevents context bleed)
 
 Meta

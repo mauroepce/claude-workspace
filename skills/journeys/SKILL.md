@@ -1,4 +1,5 @@
 ---
+name: journeys
 description: Detect user-facing journeys in a codebase (auth flows, payment flows, main feature actions) and produce Mermaid sequence diagrams for each. Outputs journeys-diagram.md. Use to communicate system behavior visually — interview prep, onboarding new team members, documenting before refactor.
 ---
 

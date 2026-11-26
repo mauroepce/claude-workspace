@@ -1,4 +1,5 @@
 ---
+name: quick-work
 description: Lite version of /work for small tasks where the full spec ceremony would be overhead. Use for single-file edits, simple bug fixes, micro-refactors, or anything you'd estimate at <30 minutes. Trades structure for speed while keeping the critical review step.
 ---
 

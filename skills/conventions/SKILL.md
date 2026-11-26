@@ -1,4 +1,5 @@
 ---
+name: conventions
 description: Scan an unfamiliar codebase and produce a structured conventions report — import style, naming, file organization, error handling, test patterns. Use when joining a new codebase (interview, new team, new client) before generating any code.
 ---
 

@@ -1,4 +1,5 @@
 ---
+name: code-review
 description: Critical code-quality review of staged changes (or specified files). Catches the classes of issues that pass tests but bite later — bad naming, hidden complexity, missing edge cases, weak test coverage, performance traps. Use before /safe-commit, or standalone when reviewing your own diff before pushing for human PR review.
 ---
 
