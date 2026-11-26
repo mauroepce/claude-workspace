@@ -18,12 +18,15 @@
 #   /conventions  — scan codebase for style/patterns (persists to file)
 #   /architecture — scan codebase structure (persists to architecture-map.md)
 #   /journeys     — detect user flows, Mermaid sequence diagrams
+#   /explain      — explanation from the foundations up (design before symptom)
 #   /decision     — capture technical decision with confidence level
 #   /code-review  — quality review of staged or specified changes
 #   /safe-commit  — /code-review + /security-review + commit with confirmation
 #   /safe-push    — full-branch review + push (refuses main without OK)
 #   /scaffold     — pick a template and insert it adapted to current context
 #   /onboard      — joining a new codebase: runs conventions + architecture + journeys
+#   /add-repo     — add a repo to a workspace with a proposed, confirmed destination
+#   /isolate      — clean workspace for tests/interviews (prevents context bleed)
 #   /commands     — list all installed personal commands with descriptions
 #
 # Templates (~/.claude/templates/):
@@ -58,6 +61,7 @@ PERSONAL_SKILLS=(
   "safe-push"
   "scaffold"
   "onboard"
+  "add-repo"
   "isolate"
   "commands"
 )
@@ -193,6 +197,7 @@ echo "  /safe-commit  — runs /code-review + /security-review + commit"
 echo "  /safe-push    — branch review + push (blocks main without OK)"
 echo "  /scaffold     — pick a template and insert it"
 echo "  /onboard      — joining a new codebase (conventions + architecture + journeys)"
+echo "  /add-repo     — add a repo to a workspace (proposed destination + confirmation)"
 echo "  /isolate      — clean workspace for tests/interviews (prevents context bleed)"
 echo "  /commands     — list installed personal commands"
 echo ""
@@ -250,5 +255,5 @@ echo ""
 echo "Verify at any time: bash <(curl -fsSL ${RAW}/bin/verify-claude-config.sh)"
 echo ""
 echo "To update: re-run this script."
-echo "To uninstall: rm -rf ~/.claude/skills/{work,quick-work,todo,issue,debug,conventions,architecture,journeys,explain,decision,code-review,safe-commit,safe-push,scaffold,onboard,isolate,commands} ~/.claude/templates/ ~/.claude/agents/code-reviewer.md"
+echo "To uninstall: rm -rf ~/.claude/skills/{work,quick-work,todo,issue,debug,conventions,architecture,journeys,explain,decision,code-review,safe-commit,safe-push,scaffold,onboard,add-repo,isolate,commands} ~/.claude/templates/ ~/.claude/agents/code-reviewer.md"
 echo ""
