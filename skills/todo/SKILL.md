@@ -1,4 +1,5 @@
 ---
+name: todo
 description: Manage persistent todos/milestones for current work. Unlike Claude Code's built-in TodoWrite (which is session-only), these survive across sessions in .claude/todos.md. Create tasks with milestones, mark them done, see current focus. Use when a task is big enough to span multiple sessions, or when you need to remember "where was I?". Also activate on in-prose markers — "TODO:", "blocker:", "done:", "checkpoint" — which map to explicit todo-file operations.
 ---
 
@@ -27,7 +28,7 @@ If none exists yet, the user is creating their first task. Skip to "Action: new"
 
 If one exists, read it fully so you have context on all active tasks before doing anything.
 
-**Workspace roots:** if the current directory is not a git repo but 2+ direct children are git repos (a parent folder holding multiple projects), the todos file lives HERE — at the workspace root — so one file tracks work across all the repos. Tag each task with the repo it belongs to (see the format below). Everything else works the same.
+**Workspace roots:** if the current directory is not a git repo but 2+ git repos live below it, at any depth (a parent folder holding multiple projects, flat or grouped as `repos/<domain>/<repo>/`), the todos file lives HERE — at the workspace root — so one file tracks work across all the repos. Tag each task with the repo it belongs to (see the format below). Everything else works the same.
 
 ## Phase 2 — Determine intent
 

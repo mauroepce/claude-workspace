@@ -67,6 +67,26 @@ for skill_dir in "$SKILLS_DIR"/*/; do
     continue
   fi
 
+  # Check 4b: name: field matches the directory. GitHub Copilot requires it
+  # (a missing name silently fails to load); Claude Code and OpenCode fall back
+  # to the directory name, so this is also what keeps the three harnesses aligned.
+  name_line=$(head -10 "$skill_file" | grep "^name:" | head -1 || true)
+  if [ -z "$name_line" ]; then
+    echo "ERROR: /${skill_name}: missing 'name:' field (required by GitHub Copilot)"
+    errors=$((errors + 1))
+    continue
+  fi
+  name_value=$(echo "$name_line" | sed 's/^name://' | sed 's/^[[:space:]]*//' | sed 's/[[:space:]]*$//')
+  case "$name_value" in
+    \"*\") name_value=${name_value#\"}; name_value=${name_value%\"} ;;
+    \'*\') name_value=${name_value#\'}; name_value=${name_value%\'} ;;
+  esac
+  if [ "$name_value" != "$skill_name" ]; then
+    echo "ERROR: /${skill_name}: name '${name_value}' does not match the directory"
+    errors=$((errors + 1))
+    continue
+  fi
+
   # Check 5: description length is reasonable (not too short, not too long)
   desc_length=${#desc_content}
   if [ $desc_length -lt 30 ]; then
@@ -135,6 +155,24 @@ if [ -f "$INSTALL_SCRIPT" ]; then
     fi
   done <<< "$script_skills"
 fi
+
+run_suite() {
+  local suite_name=$1 suite_script=$2
+  if [ -f "$suite_script" ]; then
+    echo "Testing $suite_name"
+    if ! bash "$suite_script"; then
+      echo "ERROR: $suite_name tests failed"
+      errors=$((errors + 1))
+    fi
+  else
+    echo "ERROR: $suite_name test script is missing"
+    errors=$((errors + 1))
+  fi
+}
+
+# Run behavior regression suites from source checkouts.
+run_suite "/add-repo URL normalization" "${SKILLS_DIR}/add-repo/tests/normalize-git-url.test.sh"
+run_suite "recursive workspace discovery" "${SKILLS_DIR}/onboard/tests/discover-repos.test.sh"
 
 echo ""
 echo "Summary: ${checked} skills checked, ${errors} errors, ${warnings} warnings"

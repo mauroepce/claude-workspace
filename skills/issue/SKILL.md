@@ -1,4 +1,5 @@
 ---
+name: issue
 description: Pull a GitHub issue by number, structure its context, and hand off to the spec → generate → review framework (/work). Use to start work that was filed as an issue.
 ---
 

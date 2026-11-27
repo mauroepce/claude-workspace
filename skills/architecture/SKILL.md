@@ -1,4 +1,5 @@
 ---
+name: architecture
 description: Scan a codebase and produce a structured architecture-map.md — stack, directory structure, database schema, API routes, auth flow, external integrations, and the 5-10 most critical files. Use when joining an unfamiliar repo or when re-loading context on your own project after months of absence (e.g., interview prep).
 ---
 

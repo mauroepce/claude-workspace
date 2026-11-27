@@ -1,4 +1,5 @@
 ---
+name: decision
 description: Capture a technical decision with its alternative, the reasoning, and your confidence level. Appends to decisions-log.md so the rationale persists across sessions. Use during /work when you make a non-trivial choice, or retroactively when documenting decisions in an existing project.
 ---
 

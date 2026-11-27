@@ -1,4 +1,5 @@
 ---
+name: safe-push
 description: Pre-push safety net. Runs full-branch security review, executes tests if available, summarizes what's about to land remote, and pushes only after explicit user confirmation. Refuses to push to main/master without an extra confirmation.
 ---
 

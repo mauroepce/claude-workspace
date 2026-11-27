@@ -1,4 +1,5 @@
 ---
+name: onboard
 description: Joining an unfamiliar codebase. Runs /conventions + /architecture + /journeys in sequence and produces an onboarding package — three persistent files plus a 5-minute "where to start reading" summary. Use on day one of a new project, a client handoff, or returning to your own code after long absence. Workspace folders with multiple repos get a root INDEX.md plus per-repo packages; team repos with committed .claude/ get *.local.md artifacts kept out of git status.
 ---
 
@@ -22,12 +23,37 @@ Run all three. The third is not optional: a repo and a workspace are not exclusi
 # parent repo. `-e` not `-d` because a worktree's .git is a FILE.
 test -e .git && echo "this dir is a repo" || echo "not a repo"
 
-# B. Are its direct children repos? (worktrees count here; the join skips them)
-ls -d */.git 2>/dev/null | wc -l | tr -d ' '
+# B. How many independent repo roots are below, at ANY depth? Excludes the
+#    current root, nested repos, worktrees and submodules, like Workspace mode.
+# BEGIN TESTED REPO COUNTER — keep this copy aligned with tests/discover-repos.test.sh
+count_repos_below() {
+  [ -e "$1/.git" ] && { echo 0; return; }
+  ( cd "$1" || exit 1
+    find . \
+      \( -name node_modules -o -name .venv -o -name venv -o -name vendor \
+         -o -name dist -o -name build -o -name target -o -name .next \
+         -o -name .turbo \) -prune -o \
+      -name .git \( -type d -o -type f \) -print -prune 2>/dev/null |
+    while IFS= read -r p; do
+      root=${p%/.git}; root=${root#./}
+      [ "$root" = "." ] && continue
+      [ -f "$p" ] && continue
+      anc=$(dirname "$root")
+      nested=0
+      while [ "$anc" != "." ] && [ "$anc" != "/" ]; do
+        if [ -e "$anc/.git" ]; then nested=1; break; fi
+        anc=$(dirname "$anc")
+      done
+      [ "$nested" -eq 0 ] && echo "$root"
+    done | wc -l | tr -d ' '
+  )
+}
+# END TESTED REPO COUNTER
+count_repos_below .
 
 # C. Is the workspace one level down? ALWAYS run this, whatever A and B said.
 for c in */; do
-  n=$(ls -d "$c"*/.git 2>/dev/null | wc -l | tr -d ' ')
+  n=$(count_repos_below "$c")
   [ "$n" -ge 2 ] && echo "workspace candidate: $c ($n repos)"
 done
 
@@ -37,11 +63,11 @@ git ls-files .claude CLAUDE.md 2>/dev/null | head -5
 
 Note for `zsh` users: an unmatched glob aborts the command instead of returning nothing. Run these in `bash`, or `setopt NULL_GLOB` first.
 
-**Case A — no `.git` in THIS directory but 2+ child directories are git repos** → this is a workspace folder, not a codebase. Jump to "Workspace mode" below. Do NOT stop with "not a git repo".
+**Case A — no `.git` in THIS directory but 2+ repositories live below it, at any depth** → this is a workspace folder, not a codebase. Jump to "Workspace mode" below. Do NOT stop with "not a git repo".
 
 A workspace often lives *inside* a repo — a parent repo holding docs and skills, with the projects cloned into `repos/`. That is why check C runs unconditionally: in that layout A says "this dir is a repo", D says "team-owned", and an agent reading the cases in order would settle on single-repo onboarding and never look down.
 
-If C names a folder, say so and run workspace mode **there**. The outer repo is then a sibling of the workspace, not a member: the join walks the workspace's direct children only, so the outer repo stays outside the graph. Say that out loud rather than letting the user assume it was scanned.
+If C names a folder, say so and run workspace mode **there**. The outer repo is then a sibling of the workspace, not a member: discovery starts at the workspace root, so the outer repo stays outside the graph. Say that out loud rather than letting the user assume it was scanned.
 
 **Case B — tracked `.claude/` files or a CLAUDE.md exist** → this repo belongs to a team, and your onboarding artifacts are personal notes, not team deliverables. Announce it:
 
@@ -193,7 +219,131 @@ Output:
 
 ## Workspace mode (parent folder with multiple repos)
 
-The folder is not a codebase — it's a workspace: each child directory with `.git` is its own project, with its own stack, conventions, and team. Onboarding it as ONE codebase would blend incompatible conventions into a muddled report, so don't. Produce two artifacts instead:
+The folder is not a codebase — it's a workspace: every directory with `.git` is its own project, with its own stack, conventions, and team. They do not have to be direct children: `repos/<domain>/<repo>/` is the recommended layout, and a flat workspace keeps working unchanged. Onboarding it as ONE codebase would blend incompatible conventions into a muddled report, so don't. Produce two artifacts instead:
+
+### 0. Inventory — find every repo before writing anything
+
+The tree is the source of truth for **where** repos are; the INDEX is derived from it. Discover recursively, compare with what the INDEX already lists, and show the diff before regenerating the table.
+
+The Phase 0 inventory and the copy in the self-contained Join must classify repositories identically. When changing one discovery definition, update the other and re-run both against flat, grouped, nested, worktree and submodule fixtures.
+
+A repository is a directory with `.git` — a directory for a normal clone, a file for a worktree or a submodule. Three things are **reported but not counted** as independent repos:
+
+- **Worktrees** (`.git` is a file pointing into `.git/worktrees/`): the same history as their main clone. Counting one duplicates every handle and every edge.
+- **Submodules** (`.git` is a file pointing into `.git/modules/`, or the path is listed in a parent's `.gitmodules`): owned by the parent repo, usually not checked out.
+- **Repos nested inside another repo** (`.git` is a directory under a directory that is itself a repo): vendored code, an embedded experiment, or a clone someone forgot to move out. Never assume it is a workspace member.
+
+```bash
+# BEGIN TESTED REPO DISCOVERY — keep both copies aligned with tests/discover-repos.test.sh
+discover_repos() {
+  find . \
+    \( -name node_modules -o -name .venv -o -name venv -o -name vendor \
+       -o -name dist -o -name build -o -name target -o -name .next \
+       -o -name .turbo \) -prune -o \
+    -name .git \( -type d -o -type f \) -print -prune 2>/dev/null |
+  while IFS= read -r p; do
+    root=${p%/.git}; root=${root#./}
+    [ -z "$root" ] && root=.
+    [ "$root" = "." ] && continue
+
+    if [ -f "$p" ]; then
+      case "$(cat "$p" 2>/dev/null)" in
+        *"/.git/modules/"*) echo "SUBMODULE $root" >&2 ;;
+        *)                  echo "WORKTREE $root" >&2 ;;
+      esac
+      continue
+    fi
+
+    anc=$root
+    while [ "$anc" != "." ] && [ "$anc" != "/" ]; do
+      anc=$(dirname "$anc"); [ "$anc" = "." ] && break
+      if [ -e "$anc/.git" ]; then
+        if [ -f "$anc/.gitmodules" ] && \
+           git -C "$anc" config -f .gitmodules --get-regexp '^submodule\..*\.path$' 2>/dev/null \
+             | awk '{print $2}' | grep -qxF "${root#"$anc"/}"; then
+          echo "SUBMODULE $root (inside $anc)" >&2
+        else
+          echo "NESTED $root (inside $anc)" >&2
+        fi
+        continue 2
+      fi
+    done
+    echo "$root"
+  done | sort
+}
+# END TESTED REPO DISCOVERY
+REPOS=$(discover_repos)
+```
+
+The diagnostics are not noise: they answer "why isn't this repo in the index?". Print them and name the bucket each skipped path fell into. A nested repo is sometimes a real member the user wants — ask, and only then add it by hand with a note in the INDEX. If a repo path contains whitespace, discovery and the INDEX can represent it, but confirm the complete join path preserves it before deriving edges; do not silently split it into multiple repo names.
+
+**The `repos/` convention.** Put every clone under one `repos/` container, grouped by domain when the organization has domains:
+
+```
+workspace/
+├── INDEX.md
+├── .claude/todos.md
+└── repos/
+    ├── cep/APP02504-martech-core-api/
+    ├── cep/APP02504-mktg-cep-web/
+    └── retail-media/APP02584-retail-media-service/
+```
+
+Why a container instead of one folder per team at the root: it gives the agent one place to look for cross-repo work, keeps workspace memory (`INDEX.md`, `.claude/`, docs) visually separate from code, and leaves room for domain grouping without inventing a new rule per team. It is a convention, not a requirement — discovery is recursive, so both layouts work. Never move an existing clone to adopt it without the user's explicit OK: a path change breaks links, sessions, and worktrees.
+
+**Diff before regenerating.** Parse the existing Repos table (the first table whose header cell is `Repo`), compare it with the discovery output, and show new / missing / likely-moved rows. "Moved" is a heuristic — the old path is gone and a new path has the same directory name. Say "likely moved" and ask; do not silently rewrite history.
+
+```bash
+INDEXED=$(awk '
+  /^\|/ && !in_table {
+    n = split($0, c, "|"); h = c[2]
+    gsub(/^[ \t]+|[ \t]+$/, "", h)
+    if (h == "Repo") { in_table = 1; next }
+  }
+  in_table && !/^\|/ { exit }
+  in_table {
+    n = split($0, c, "|"); cell = c[2]
+    gsub(/^[ \t]+|[ \t]+$/, "", cell)
+    if (cell ~ /^-+$/) next
+    gsub(/`/, "", cell); sub(/\/$/, "", cell)
+    if (cell != "") print cell
+  }
+' INDEX.md 2>/dev/null | sort)
+
+NEW=$(comm -23 <(printf '%s\n' "$REPOS") <(printf '%s\n' "$INDEXED"))
+GONE=$(comm -13 <(printf '%s\n' "$REPOS") <(printf '%s\n' "$INDEXED"))
+
+# A missing path and a new path with the same final directory name are a
+# likely move, not a proven rename. Keep the raw NEW/GONE lists visible too.
+MOVED=$(awk -F/ '
+  FILENAME==ARGV[1] {
+    if (NF) { new_count[$NF]++; new_paths[$NF]=new_paths[$NF] (new_paths[$NF]?" | ":"") $0 }
+    next
+  }
+  NF { gone_count[$NF]++; gone_paths[$NF]=gone_paths[$NF] (gone_paths[$NF]?" | ":"") $0 }
+  END {
+    for (base in new_count) if (base in gone_count) {
+      if (new_count[base]==1 && gone_count[base]==1)
+        print "MOVED\t" gone_paths[base] "\t" new_paths[base]
+      else
+        print "AMBIGUOUS\t" base "\t" gone_paths[base] "\t" new_paths[base]
+    }
+  }
+' <(printf '%s\n' "$NEW" | sed '/^$/d') <(printf '%s\n' "$GONE" | sed '/^$/d'))
+count_lines() { printf '%s\n' "$1" | grep -c . || true; }
+NMOVED=$(printf '%s\n' "$MOVED" | awk -F '\t' '$1=="MOVED"{n++} END{print n+0}')
+NAMBIGUOUS=$(printf '%s\n' "$MOVED" | awk -F '\t' '$1=="AMBIGUOUS"{n++} END{print n+0}')
+printf 'new: %s, missing: %s, likely moved: %s, ambiguous basename matches: %s\n' \
+  "$(count_lines "$NEW")" "$(count_lines "$GONE")" "$NMOVED" "$NAMBIGUOUS"
+printf '%s\n' "$NEW" | grep . | sed 's/^/  new: /' || true
+printf '%s\n' "$GONE" | grep . | sed 's/^/  missing: /' || true
+printf '%s\n' "$MOVED" | awk -F '\t' '
+  $1=="MOVED" {printf "  likely moved: %s -> %s\n", $2, $3}
+  $1=="AMBIGUOUS" {printf "  ambiguous basename %s: missing [%s], new [%s]\n", $2, $3, $4}
+'
+```
+
+Show the report even when everything matches (`new: 0, missing: 0, likely moved: 0, ambiguous basename matches: 0`). Silence is ambiguous: it looks the same as a diff that never ran. A likely move may also appear in the raw new/missing lists; do not silently relabel it. Only report a likely move when exactly one missing and one new path share a basename. If either side has multiple matches, report the ambiguity and leave every path in the raw new/missing lists. Only after the user sees the report, regenerate the table.
 
 ### 1. handles.md — what each repo answers to (this is what makes routing possible)
 
@@ -201,7 +351,7 @@ Do this before the INDEX, because the INDEX is derived from it.
 
 The problem it solves, measured on a real workspace: grepping for a repo's **directory name** `tg-oss` finds 6 files. Grepping for the name it publishes under, `@teselagen/ui`, finds 1011. Same dependency, 168x apart. **You can grep for what a repo calls; you cannot grep for what it is called** — so the name is the one thing worth writing to disk.
 
-Write `<repo>/.claude/handles.local.md` in **every** repo, team-owned or not. These are your personal routing notes, never a team deliverable, so they are always the `.local` variant. Add the exclude line in each repo — do not assume it is already there, it usually is not:
+Write `<repo>/.claude/handles.local.md` in **every** repo, team-owned or not. `<repo>` is the relative path discovery printed (`cep/x`, `repos/retail-media/y`), not a bare name — the path is what keeps two repos with the same directory name apart. These are your personal routing notes, never a team deliverable, so they are always the `.local` variant. Add the exclude line in each repo — do not assume it is already there, it usually is not:
 
 ```bash
 grep -qF '.claude/**/*.local.md' .git/info/exclude 2>/dev/null || \
@@ -307,6 +457,8 @@ fix the repo's .claude/handles.local.md and re-run the join at the bottom.*
 <paste the exact script, so the file carries its own instructions>
 ```
 
+The `Repo` cell is the path discovery printed, with a trailing `/` (`cep/x/`, `repos/retail-media/y/`). Nested paths are not flattened: the path is how a reader finds the repo and how the join reaches it.
+
 **The join.** Run from the workspace root, in `bash`. It picks its own regex engine, enforces the blocklist, and reports what it threw away:
 
 ```bash
@@ -316,15 +468,56 @@ INDEX=INDEX.md
 TMPERR=$(mktemp)
 trap "rm -f $TMPERR" EXIT
 
-REPOS=$(for d in */; do [ -d "$d/.git" ] && echo "${d%/}"; done)
-for d in */; do [ -e "$d/.git" ] && [ ! -d "$d/.git" ] && echo "skipped worktree: ${d%/}" >&2; done
+# Recursive discovery: a repo is any directory with .git, at any depth.
+# Worktrees, submodules and repos nested inside another repo are reported and
+# skipped — the first two duplicate history, the third is usually vendored.
+# BEGIN TESTED REPO DISCOVERY — keep both copies aligned with tests/discover-repos.test.sh
+discover_repos() {
+  find . \
+    \( -name node_modules -o -name .venv -o -name venv -o -name vendor \
+       -o -name dist -o -name build -o -name target -o -name .next \
+       -o -name .turbo \) -prune -o \
+    -name .git \( -type d -o -type f \) -print -prune 2>/dev/null |
+  while IFS= read -r p; do
+    root=${p%/.git}; root=${root#./}
+    [ -z "$root" ] && root=.
+    [ "$root" = "." ] && continue
+
+    if [ -f "$p" ]; then
+      case "$(cat "$p" 2>/dev/null)" in
+        *"/.git/modules/"*) echo "SUBMODULE $root" >&2 ;;
+        *)                  echo "WORKTREE $root" >&2 ;;
+      esac
+      continue
+    fi
+
+    anc=$root
+    while [ "$anc" != "." ] && [ "$anc" != "/" ]; do
+      anc=$(dirname "$anc"); [ "$anc" = "." ] && break
+      if [ -e "$anc/.git" ]; then
+        if [ -f "$anc/.gitmodules" ] && \
+           git -C "$anc" config -f .gitmodules --get-regexp '^submodule\..*\.path$' 2>/dev/null \
+             | awk '{print $2}' | grep -qxF "${root#"$anc"/}"; then
+          echo "SUBMODULE $root (inside $anc)" >&2
+        else
+          echo "NESTED $root (inside $anc)" >&2
+        fi
+        continue 2
+      fi
+    done
+    echo "$root"
+  done | sort
+}
+# END TESTED REPO DISCOVERY
+REPOS=$(discover_repos)
 [ -z "$REPOS" ] && { echo "no git repos here" >&2; exit 1; }
 
 # handle <TAB> the repo that serves it
-MAP=$(for r in $REPOS; do
+MAP=$(while IFS= read -r r; do
+        [ -n "$r" ] || continue
         awk -v repo="$r" -F' :: ' '/^serves:/{s=1;next} /^scanned:/{s=0} s&&/^- /{sub(/^- /,"");gsub(/ +$/,"",$1);print $1"\t"repo}' \
           "$r"/.claude/handles*.md 2>/dev/null
-      done)
+      done <<< "$REPOS")
 ALL=$(printf '%s\n' "$MAP" | cut -f1 | sort -u)
 DUP=$(printf '%s\n' "$MAP" | sort -u | cut -f1 | uniq -d)
 
@@ -363,7 +556,10 @@ scan() {
   fi
 }
 
-RAW=$(for r in $REPOS; do scan "$r" | sort | uniq -c | sed "s|^|$r |"; done)
+RAW=$(while IFS= read -r r; do
+        [ -n "$r" ] || continue
+        scan "$r" | sort | uniq -c | awk -v repo="$r" '{handle=$2; for(i=3;i<=NF;i++) handle=handle " " $i; printf "%s\t%d\t%s\n",repo,$1,handle}'
+      done <<< "$REPOS")
 
 # Rows you already investigated and disproved: "from -> to via handle : reason".
 # Backticks stripped, because that is how a handle gets written in markdown and
@@ -375,7 +571,7 @@ RULED=$(awk '/^## Edges ruled out/{r=1;next} /^## /{r=0}
 
 # Threshold applies per PAIR, not per row: two handles naming the same service
 # are evidence for one edge, and splitting them must not drop it.
-DERIVED=$(awk -v min="$MIN_HITS" '
+DERIVED=$(awk -F '\t' -v min="$MIN_HITS" '
   FNR==1 { part++ }
   part==1 { split($0,F,"\t"); if(F[1]!="") owner[F[1]]=F[2]; next }
   part==2 { if($0!="") out[$0]=1; next }
@@ -412,7 +608,7 @@ printf '%s\n' "$DERIVED" | awk -F'\t' 'NF==4{k=$2"\t"$1; sum[k]+=$4}
            line=line (line==""?"":", ") byto[t"\t"bi]; w[t"\t"bi]=-2 }
          print "- `"t"` <- "line } }' | sort
 echo
-SEEN=$(printf '%s\n' "$RAW" | awk '{print $3}' | sort -u)
+SEEN=$(printf '%s\n' "$RAW" | awk -F '\t' '{print $3}' | sort -u)
 report "zero hits anywhere (dead weight)" "$(comm -23 <(printf '%s\n' "$KEEP" | sort) <(printf '%s\n' "$SEEN"))"
 ```
 

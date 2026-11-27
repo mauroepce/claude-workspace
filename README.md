@@ -2,11 +2,11 @@
 
 # claude-workspace
 
-**A senior workflow for Claude Code, encoded as 17 skills, 4 hooks, and one habit: open the session one level above the repos.**
+**A senior workflow for Claude Code, encoded as 18 skills, 4 hooks, and one habit: open the session one level above the repos.**
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](./LICENSE)
 [![Plugin version](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fmauroepce%2Fclaude-workspace%2Fmain%2F.claude-plugin%2Fplugin.json&query=%24.version&label=plugin&color=6C63FF)](./.claude-plugin/plugin.json)
-[![Skills](https://img.shields.io/badge/skills-17-C9A84C)](./docs/FRAMEWORK.md#the-seventeen-skills)
+[![Skills](https://img.shields.io/badge/skills-18-C9A84C)](./docs/FRAMEWORK.md#the-eighteen-skills)
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen)](./CONTRIBUTING.md)
 
 </div>
@@ -53,6 +53,8 @@ the pen     no write tools      hook: code,          hash still matches
 > [!IMPORTANT]
 > Pick **one** option. Installing both gives you every skill twice (`/work` and `/claude-workspace:work`).
 
+> Using GitHub Copilot or OpenCode? The skills are portable — same `SKILL.md`, different discovery paths. See [docs/HARNESSES.md](./docs/HARNESSES.md) for the supported locations and a verification step per harness.
+
 <details open>
 <summary><b>Option A — Plugin</b> (recommended: skills + subagent + all 4 hooks, one managed unit)</summary>
 
@@ -83,7 +85,7 @@ curl -fsSL https://raw.githubusercontent.com/mauroepce/claude-workspace/main/bin
 ```
 
 Installs:
-- 17 skills to `~/.claude/skills/<name>/SKILL.md` (invoked as bare `/work`, `/conventions`, ...)
+- 18 skills to `~/.claude/skills/<name>/SKILL.md` (invoked as bare `/work`, `/conventions`, ...)
 - 9 code templates + 1 CI workflow template to `~/.claude/templates/`
 - The `code-reviewer` subagent to `~/.claude/agents/`
 
@@ -137,7 +139,9 @@ org-workspace/                 no .git · open Claude Code HERE
 
 </details>
 
-`/onboard` detects this shape automatically (no root `.git`, 2+ child git repos) and builds the `INDEX.md`; `/todo` keeps one focus list across repos; the session-start hook pushes the focused task into context the moment you open the session. Each repo also declares the names it answers to in `.claude/handles.md`, and the INDEX derives the edges between them with one batched grep — so a cross-repo task opens the two or three repos it needs instead of all twelve. The child repos stay untouched — no submodules, no workspace build, nothing to explain to your team. The layer exists for memory, not for tooling: it's what makes "where was I with this client?" a question the session answers instead of asks.
+`/onboard` detects this shape automatically (no root `.git`, 2+ repos at any depth, including `repos/<domain>/<repo>/`) and builds the `INDEX.md`; `/todo` keeps one focus list across repos; the session-start hook pushes the focused task into context the moment you open the session. Each repo also declares the names it answers to in `.claude/handles.md`, and the INDEX derives the edges between them with one batched grep — so a cross-repo task opens the two or three repos it needs instead of all twelve. The child repos stay untouched — no submodules, no workspace build, nothing to explain to your team. The layer exists for memory, not for tooling: it's what makes "where was I with this client?" a question the session answers instead of asks.
+
+Discovery is recursive: a flat workspace and a `repos/` container both work, and worktrees, submodules and nested clones are reported instead of silently counted. `/add-repo` is the write side — it reads the map, proposes a destination, and clones only after you confirm.
 
 Works for an organization's repo fleet, a service + front product pair, or any multi-item pipeline you steer with an agent. Full write-up in [`docs/FRAMEWORK.md`](./docs/FRAMEWORK.md#the-workspace-layer-state-one-level-above-the-repos).
 
@@ -168,6 +172,7 @@ Works for an organization's repo fleet, a service + front product pair, or any m
 | `/safe-push` | Full-branch review + push (refuses main without OK) |
 | `/scaffold` | Pick from curated code templates, insert adapted to context |
 | `/onboard` | Joining a new codebase; workspace folders get a root `INDEX.md`, team repos get `*.local.md` artifacts |
+| `/add-repo` | Add a repo to a workspace: reads the map, proposes a destination, confirms before cloning |
 | `/isolate` | Clean workspace for tests/interviews — prevents context bleed from other projects |
 | `/commands` | List all installed personal skills with their descriptions |
 
@@ -211,7 +216,7 @@ curl -fsSL https://raw.githubusercontent.com/mauroepce/claude-workspace/main/bin
 **Uninstall** — plugin installs: from `/plugin`. Curl installs:
 
 ```bash
-rm -rf ~/.claude/skills/{work,quick-work,todo,issue,debug,conventions,architecture,journeys,explain,decision,code-review,safe-commit,safe-push,scaffold,onboard,isolate,commands}
+rm -rf ~/.claude/skills/{work,quick-work,todo,issue,debug,conventions,architecture,journeys,explain,decision,code-review,safe-commit,safe-push,scaffold,onboard,add-repo,isolate,commands}
 rm -rf ~/.claude/templates/
 ```
 

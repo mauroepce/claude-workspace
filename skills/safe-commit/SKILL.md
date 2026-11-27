@@ -1,4 +1,5 @@
 ---
+name: safe-commit
 description: Run a security review on staged changes, generate a commit message tied to the original spec from /work, and commit only after explicit user confirmation. Never bypasses hooks.
 ---
 

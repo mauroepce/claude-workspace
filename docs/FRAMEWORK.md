@@ -1,6 +1,6 @@
 # The Framework
 
-> A short, opinionated methodology for working with AI agents on production code. Not theoretical — the seventeen `skills/` in this repo encode it.
+> A short, opinionated methodology for working with AI agents on production code. Not theoretical — the eighteen `skills/` in this repo encode it.
 
 ## The thesis
 
@@ -14,7 +14,7 @@ The work has shifted. Writing code is no longer the senior skill — **directing
 
 This isn't novel philosophy. It's the practical operating model of senior engineers who have shipped real production code with agents in 2025–2026. The commands in this repo make it executable.
 
-## The seventeen skills
+## The eighteen skills
 
 Each skill is a folder `skills/<name>/SKILL.md` installed to `~/.claude/skills/`. Two invocation paths:
 
@@ -63,7 +63,7 @@ Two additions make it push instead of pull:
 - **In-prose markers** — `TODO: <text>`, `blocker: <text>`, `done: <text>`, `checkpoint` written mid-conversation are explicit todo-file operations; no need to invoke `/todo` formally. A marker is a line the user wrote, not a topic they mentioned.
 - **The session-status hook** (optional, `bin/install-hooks.sh`) reads the todos file at session start and pushes the focused task + next milestone into context. See § Deterministic status below.
 
-Workspace-aware: in a parent folder holding multiple repos (no root `.git`, 2+ child git repos), the todos file lives at the workspace root and tasks carry a `Repo:` tag.
+Workspace-aware: in a parent folder holding multiple repos (no root `.git`, 2+ git repos at any depth), the todos file lives at the workspace root and tasks carry a `Repo:` tag.
 
 #### `/issue <number>` — GitHub issue intake
 
@@ -116,9 +116,17 @@ This is the meta-command. The three sub-commands stay atomic and invokable indep
 Two detection modes (Phase 0) handle the non-trivial terrains:
 
 - **Team repos** — if the repo commits `.claude/` content or a CLAUDE.md, the onboarding artifacts are personal notes in someone else's house: every output switches to its `*.local.md` variant and the skill offers `.git/info/exclude` (never `.gitignore`, which is a shared file) so nothing personal appears in the team's `git status`.
-- **Workspace folders** — a parent directory whose children are git repos (client workspaces, multi-repo products) gets a cheap root `INDEX.md` plus full per-repo packages on demand, instead of one muddled cross-stack report. The INDEX also carries a **derived routing layer** (see below), so a cross-repo task can name the two or three repos it needs instead of loading all of them.
+- **Workspace folders** — a parent directory with 2+ git repos at any depth (client workspaces, multi-repo products, including `repos/<domain>/<repo>/`) gets a cheap root `INDEX.md` plus full per-repo packages on demand, instead of one muddled cross-stack report. The INDEX also carries a **derived routing layer** (see below), so a cross-repo task can name the two or three repos it needs instead of loading all of them. Discovery is recursive and reports worktrees, submodules and nested clones instead of counting them as members.
 
 On the first onboard of a repo it also asks one setup question — should commits here carry the `Co-Authored-By: Claude` trailer? — and records the answer in the conventions file, where `/safe-commit` reads it. Asked once, skipped when the repo's CLAUDE.md already states a rule.
+
+#### `/add-repo` — add a repository without guessing
+
+The write side of workspace discovery. Reads the existing shape (`INDEX.md`, `repos/`, domain folders, existing remotes), proposes a destination that matches it, validates the path and the URL, and runs `git clone` only after an explicit yes.
+
+The rules it enforces: a repo already cloned is not cloned twice; an existing destination is never overwritten; a destination inside another repo's work tree is flagged as a nested repo; and a domain folder is not invented for a single clone. After the clone it adds the Repos row and stops — Names and Edges come from `/onboard`, not from the URL.
+
+Why explicit instead of a hook on `git clone`: a hook sees a URL, not the workspace map, the team boundaries, or the fact that the repo is already there under a different name. The failure mode of a wrong guess is a repo in the wrong team's folder that the index then has to explain.
 
 #### `/isolate` — clean workspace for tests and interviews
 
@@ -284,7 +292,8 @@ The regenerable source is `docs/img/gen-workspace-layer.py` — it writes both t
 
 The skills already cooperate at this layer without configuration:
 
-- `/onboard` detects a workspace folder (no root `.git`, 2+ child git repos) and produces the root `INDEX.md` plus full per-repo packages on demand, instead of one muddled cross-stack report.
+- `/onboard` detects a workspace folder (no root `.git`, 2+ repos at any depth, including `repos/<domain>/<repo>/`) and produces the root `INDEX.md` plus full per-repo packages on demand, instead of one muddled cross-stack report. Discovery is recursive, compares the tree with the existing index before regenerating it, and reports worktrees, submodules and nested clones instead of silently counting them.
+- `/add-repo` is the explicit write side: it reads the map, proposes a destination, validates it, and clones only after confirmation — never a hook that guesses from a URL.
 - `/todo` keeps the task list at the workspace root with `Repo:` tags; a single focus list for work that hops between repos.
 - The **session-status hook** reads that root todos file, so opening Claude Code at the workspace root starts the session already knowing the focused task and its next milestone.
 - `/decision` at the root records the choices that span repos ("front consumes service errors as RFC 7807", "auth lives in the service, front only refreshes tokens").
